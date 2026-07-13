@@ -643,11 +643,17 @@ body.auth-pending main {
   padding-bottom: var(--space-8);
 }
 
-/* ===== Layout da calculadora: formulário + resultado lado a lado =====
-   Em telas largas, o resultado fica "grudado" (sticky) ao lado do
-   formulário em vez de exigir rolar a página inteira pra ver o preço —
-   o formulário costuma ser mais alto que o painel de resultado, então é
-   ele que "acompanha" o scroll dentro da própria altura do formulário. */
+/* ===== Layout da calculadora: formulário (2 colunas em telas largas) em
+   cima, resultado embaixo =====
+   O formulário cresceu (7 seções, e mais marketplaces vêm por aí), então
+   em vez de ficar espremido numa coluna estreita ao lado do resultado, ele
+   agora usa a largura toda e se divide em 2 colunas internas — os campos
+   "principais" (produto, margem, Mercado Livre, frete) de um lado, os
+   marketplaces de referência (Amazon, Shopee, TikTok Shop, ...) do outro.
+   O resultado fica logo abaixo, em cartões compactos (ver
+   .compare-card--compact) — o detalhe completo de cada um abre num popup
+   ao tocar (ver .card-modal), então a comparação rápida não fica poluída
+   com número demais de uma vez. */
 .calc-layout {
   position: relative;
   z-index: 1;
@@ -655,33 +661,39 @@ body.auth-pending main {
   margin: -88px auto 0;
   padding: 0 var(--space-4);
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-6);
-  align-items: start;
-}
-@media (min-width: 1080px) {
-  .calc-layout {
-    grid-template-columns: minmax(420px, 480px) 1fr;
-    gap: var(--space-7);
-  }
 }
 
 .calc-form-card {
   min-width: 0;
 }
 
-.calc-results-panel {
+.calc-form-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--space-7);
+}
+@media (min-width: 760px) {
+  .calc-form-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+  .calc-form-col + .calc-form-col {
+    border-left: 1px solid var(--border-soft);
+    padding-left: var(--space-7);
+  }
+}
+.calc-form-col {
+  /* Sem isso, o item de grid usa min-width:auto (o min-content do
+     conteúdo) — a linha de dimensões da embalagem (3 campos + "×") é
+     larga o bastante pra quebrar a divisão igual do 1fr/1fr entre as
+     colunas. */
   min-width: 0;
 }
-.calc-results-panel__sticky {
-  position: relative;
-}
-@media (min-width: 1080px) {
-  .calc-results-panel__sticky {
-    position: sticky;
-    top: var(--space-5);
-  }
+
+.calc-results-block {
+  min-width: 0;
 }
 
 .results-empty {
@@ -1166,18 +1178,6 @@ body.auth-pending main {
 @media (min-width: 480px) {
   .form-actions { flex-direction: row; }
 }
-/* A partir de 1080px o .calc-layout vira 2 colunas e o cartão do
-   formulário fica mais estreito (~420-480px, ver .calc-layout) — não
-   sobra largura pros dois botões lado a lado sem quebrar o texto.
-   Abaixo de 1080px o cartão ainda ocupa a tela quase toda (coluna
-   única), aí o par lado a lado cabe bem — só forço empilhado no
-   breakpoint estreito. */
-@media (min-width: 1080px) {
-  .calc-form-card .form-actions {
-    flex-direction: column;
-  }
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1407,6 +1407,18 @@ body.auth-pending main {
   .compare-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Grade compacta: cartões menores, quantos couberem por linha — usada na
+   comparação principal (ver .compare-card--compact). O detalhe completo
+   de cada marketplace abre num popup ao tocar, então esses cartões só
+   precisam do essencial pra comparação rápida. */
+.compare-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+@media (min-width: 640px) and (max-width: 1079px) {
+  .compare-grid--compact { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
 .compare-card {
   position: relative;
   border-radius: var(--radius-lg);
@@ -1435,6 +1447,124 @@ body.auth-pending main {
 }
 .compare-card--best {
   box-shadow: 0 24px 55px -8px var(--brand-glow, rgba(0, 0, 0, 0.5)), 0 0 0 2px var(--green);
+}
+
+/* Cartão compacto (grade principal) — é um <button>, então zera os
+   estilos padrão de botão do navegador (border/background/font/texto
+   centralizado) por baixo (:where dá especificidade zero, pra não
+   competir com as cores das classes .brand--* que precisam continuar
+   ganhando — ver .brand--amazon etc. acima). Só o essencial (posição,
+   selo, nome, preço) fica visível; o resto abre no popup ao tocar. */
+:where(.compare-card--compact) {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+.compare-card--compact:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+.compare-card--compact .compare-card__price {
+  font-size: 1.7rem;
+  margin-bottom: var(--space-1);
+}
+.compare-card--compact .compare-card__name {
+  padding-right: 34px;
+}
+.compare-card__hint {
+  display: block;
+  margin-top: var(--space-3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+/* ===== Popup de detalhe (um cartão por vez) =====
+   Usa <dialog> nativo: showModal() já cuida de foco preso dentro do
+   popup, tecla Esc fecha, e o foco volta pro cartão que abriu quando
+   fecha — sem precisar reimplementar nada disso à mão. O <dialog> ocupa a
+   tela toda (transparente, só centraliza o conteúdo com flex) só pra dar
+   um alvo de clique confiável pra "fechar ao clicar fora" (o
+   ::backdrop de verdade não recebe click listener direto). */
+dialog.card-modal {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+dialog.card-modal[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+dialog.card-modal::backdrop {
+  background: rgba(5, 10, 20, 0.68);
+  backdrop-filter: blur(3px);
+}
+.card-modal__inner {
+  position: relative;
+  width: min(92vw, 480px);
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  animation: modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-modal__inner { animation: none; }
+}
+.card-modal__content .compare-card {
+  /* .compare-card começa com opacity:0/translateY(16px) e só fica visível
+     através da animação card-in (ver acima) — como o popup já tem sua
+     própria entrada (.card-modal__inner, animação modal-in), desativamos
+     essa e por isso precisamos repor o estado final manualmente aqui. */
+  animation: none;
+  opacity: 1;
+  transform: none;
+  cursor: default;
+}
+.card-modal__close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-3);
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+.card-modal__close:hover {
+  transform: scale(1.08);
+  background: var(--bg-4);
+}
+.card-modal__close:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .compare-card__rank {

@@ -420,11 +420,49 @@ próprio (`entry.halveFeeBelow`) em vez de estar hardcoded no nome do marketplac
 - Publicado em produção e testado lá também (reproduzindo o exemplo da camisa, bateu
   R$45,00 → R$8,50 de taxa total).
 
+### 16. Layout da calculadora: formulário em 2 colunas + resultado compacto com popup (13/07/2026)
+
+O formulário já tinha 7 seções (e cresce a cada marketplace novo) e ficava numa coluna
+estreita ao lado do resultado — pedido seu foi encurtar isso e mover o resultado pra baixo,
+em cartões menores que abrem um popup com o detalhe completo ao tocar.
+
+- **Formulário em 2 colunas** (`.calc-form-cols`, a partir de 760px de largura, empilha em
+  telas estreitas): coluna esquerda com os campos "principais" (Produto, Sua margem,
+  Mercado Livre, Frete); coluna direita com os marketplaces de referência (Amazon, Shopee,
+  TikTok Shop, e os próximos que entrarem). O card do formulário deixou de ter largura
+  travada (~420-480px) e agora usa a largura toda do layout.
+- **Bug de grid encontrado e corrigido no processo**: as duas colunas não ficavam do mesmo
+  tamanho mesmo com `1fr 1fr` — a linha de dimensões da embalagem (3 campos + "×") tem um
+  "tamanho mínimo de conteúdo" maior que a metade da largura, e por padrão um item de grid
+  não encolhe além do próprio conteúdo. Corrigido com `min-width: 0` na coluna, um ajuste
+  clássico de CSS Grid.
+- **Resultado movido pra baixo do formulário**, em cartões compactos (nome, preço, selo de
+  "menor preço"/"empate" — só o essencial, decisão confirmada com você) numa grade que
+  ajusta quantos cabem por linha (`repeat(auto-fill, minmax(180px, 1fr))`).
+- **Popup de detalhe**: cada cartão compacto é um `<button>` que, ao ser tocado, abre um
+  `<dialog>` nativo com o cartão completo (barra proporcional, legenda, comissão, taxa fixa,
+  lucro etc.) — o mesmo conteúdo que antes ficava sempre visível. Usar `<dialog>` nativo em
+  vez de um modal construído à mão evitou reimplementar foco preso dentro do popup, fechar
+  com Esc, e devolver o foco pro elemento que abriu — o navegador já cuida de tudo isso via
+  `showModal()`. "Fechar ao clicar fora" foi implementado fazendo o `<dialog>` cobrir a tela
+  inteira (transparente, só centralizando o conteúdo) e comparando `event.target` com o
+  próprio dialog — o `::backdrop` de verdade não recebe clique diretamente.
+- **Bug de CSS encontrado e corrigido no processo**: o cartão completo dentro do popup
+  ficava invisível — `.compare-card` começa com `opacity: 0` e só fica visível através da
+  animação de entrada da grade (`card-in`); ao desativar essa animação dentro do popup (pra
+  não repetir o efeito, já que o popup tem a própria entrada), esqueci de repor
+  `opacity: 1` manualmente, então o cartão ficava permanentemente invisível. Pego e corrigido
+  antes de publicar, com captura de tela confirmando a correção.
+- Testado localmente e em produção: desktop (colunas lado a lado, largura idêntica) e mobile
+  (colunas empilhadas, popup ocupando a tela com rolagem), abrir/fechar o popup pelas 3 formas
+  (botão X, tecla Esc, clique fora) com o foco voltando corretamente pro cartão que abriu.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança, primeiro deploy em
-produção e agora Amazon + Shopee + TikTok Shop como marketplaces de referência — tudo
-testado e funcionando. Falta:
+produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, e agora o novo
+layout (formulário em 2 colunas + resultado compacto com popup) — tudo testado e
+funcionando. Falta:
 
 1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em

@@ -411,6 +411,104 @@ function resolveEntryPricing(entry, values, shippingCost) {
   return r;
 }
 
+/**
+ * Topo do cartão (selo de posição, selos de "menor preço"/"taxa real",
+ * nome e preço) — compartilhado entre o cartão compacto (grade) e o
+ * cartão completo (popup), pra não duplicar essa parte em dois lugares.
+ * `animateDelay` null = mostra o preço já pronto, sem a animação de
+ * contagem (usado no popup, aberto sob demanda); um número = anima com
+ * esse atraso em ms (usado na grade, no primeiro carregamento).
+ */
+function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay }) {
+  const frag = document.createDocumentFragment();
+
+  const rankBadge = document.createElement("span");
+  rankBadge.className = "compare-card__rank";
+  rankBadge.textContent = String(rank);
+  frag.appendChild(rankBadge);
+
+  if (isBest) {
+    const badge = document.createElement("p");
+    badge.className = "compare-card__badge";
+    badge.textContent = tiedCount > 1 ? "Valores empatados" : "Menor preço ao cliente";
+    frag.appendChild(badge);
+  }
+
+  if (entry.isRealFee) {
+    const realBadge = document.createElement("p");
+    realBadge.className = "compare-card__real-badge";
+    realBadge.textContent = "Taxa real consultada agora";
+    frag.appendChild(realBadge);
+  }
+
+  const name = document.createElement("p");
+  name.className = "compare-card__name";
+  name.textContent = entry.label;
+  frag.appendChild(name);
+
+  const price = document.createElement("p");
+  price.className = "compare-card__price";
+  if (animateDelay != null) {
+    animateCountUp(price, r.suggestedPrice, formatBRL, 700, animateDelay);
+  } else {
+    price.textContent = formatBRL(r.suggestedPrice);
+  }
+  frag.appendChild(price);
+
+  return frag;
+}
+
+/** Cartão completo (barra proporcional, legenda, grade de detalhes e
+ * observação) — usado dentro do popup, construído sob demanda no clique
+ * (ver openCardModal) em vez de ficar sempre no DOM da grade. */
+function buildFullCard(entry, r, meta) {
+  const card = document.createElement("div");
+  card.className = `compare-card brand--${entry.theme}`;
+  if (meta.isBest) card.classList.add("compare-card--best");
+  card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: null }));
+
+  const { bar, legend } = buildBreakdownBar(r);
+  const details = document.createElement("dl");
+  details.className = "compare-card__details";
+  details.append(
+    detailRow("Comissão", `${formatPercent(r.commissionPct)} · ${formatBRL(r.commissionValue)}`),
+    detailRow("Taxa fixa", formatBRL(r.fixedFeeValue)),
+    detailRow("Frete (vendedor)", formatBRL(r.shippingCostValue)),
+    detailRow("Total de taxas", formatBRL(r.totalMlFees)),
+    detailRow("Total de custos", formatBRL(r.totalCosts)),
+    detailRow("Lucro líquido", formatBRL(r.netProfit), { highlight: true }),
+    detailRow("Lucro sobre custo", formatPercent(r.profitOverCostPct)),
+    detailRow("Margem líquida", formatPercent(r.netMarginPct))
+  );
+  card.append(bar, legend, details);
+
+  if (entry.captionNote) {
+    const caption = document.createElement("p");
+    caption.className = "compare-card__caption";
+    caption.textContent = entry.captionNote;
+    card.appendChild(caption);
+  }
+
+  return card;
+}
+
+const cardModal = document.getElementById("cardModal");
+const cardModalContent = document.getElementById("cardModalContent");
+
+function openCardModal(entry, r, meta) {
+  if (!cardModal) return;
+  cardModalContent.replaceChildren(buildFullCard(entry, r, meta));
+  cardModal.setAttribute("aria-label", `${entry.label}: ${formatBRL(r.suggestedPrice)}, detalhes`);
+  cardModal.showModal();
+}
+
+document.getElementById("cardModalClose")?.addEventListener("click", () => cardModal.close());
+cardModal?.addEventListener("click", (event) => {
+  // Clicou fora do cartão (na área vazia do próprio <dialog>, que cobre a
+  // tela toda) — fecha, igual clicar no fundo escurecido.
+  if (event.target === cardModal) cardModal.close();
+});
+
 function renderAllMarketplaces(values, feesList, shippingCost = 0) {
   if (typeof MARKETPLACE_FEES === "undefined") return;
   const fees = feesList || MARKETPLACE_FEES;
@@ -437,64 +535,28 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
     const rank = index + 1;
     const isBest = toCents(r.suggestedPrice) === cheapestCents;
     const stagger = index * 70;
+    const meta = { rank, isBest, tiedCount };
 
-    const card = document.createElement("article");
-    card.className = `compare-card brand--${entry.theme}`;
+    // Cartão compacto: só o essencial (posição, selo, nome, preço) — o
+    // resto (comissão, taxa fixa, lucro, barra proporcional) fica no
+    // popup, aberto no clique (ver openCardModal/buildFullCard acima).
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `compare-card compare-card--compact brand--${entry.theme}`;
     if (isBest) card.classList.add("compare-card--best");
+    card.setAttribute("aria-label", `${entry.label}: ${formatBRL(r.suggestedPrice)}. Ver detalhes.`);
     if (!prefersReducedMotion) {
       card.style.setProperty("--stagger", `${stagger}ms`);
     }
 
-    const rankBadge = document.createElement("span");
-    rankBadge.className = "compare-card__rank";
-    rankBadge.textContent = String(rank);
-    card.appendChild(rankBadge);
+    card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: prefersReducedMotion ? null : stagger }));
 
-    if (isBest) {
-      const badge = document.createElement("p");
-      badge.className = "compare-card__badge";
-      badge.textContent = tiedCount > 1 ? "Valores empatados" : "Menor preço ao cliente";
-      card.appendChild(badge);
-    }
+    const hint = document.createElement("span");
+    hint.className = "compare-card__hint";
+    hint.textContent = "Ver detalhes";
+    card.appendChild(hint);
 
-    if (entry.isRealFee) {
-      const realBadge = document.createElement("p");
-      realBadge.className = "compare-card__real-badge";
-      realBadge.textContent = "Taxa real consultada agora";
-      card.appendChild(realBadge);
-    }
-
-    const name = document.createElement("p");
-    name.className = "compare-card__name";
-    name.textContent = entry.label;
-
-    const price = document.createElement("p");
-    price.className = "compare-card__price";
-    animateCountUp(price, r.suggestedPrice, formatBRL, 700, stagger);
-
-    const { bar, legend } = buildBreakdownBar(r);
-
-    const details = document.createElement("dl");
-    details.className = "compare-card__details";
-    details.append(
-      detailRow("Comissão", `${formatPercent(r.commissionPct)} · ${formatBRL(r.commissionValue)}`),
-      detailRow("Taxa fixa", formatBRL(r.fixedFeeValue)),
-      detailRow("Frete (vendedor)", formatBRL(r.shippingCostValue)),
-      detailRow("Total de taxas", formatBRL(r.totalMlFees)),
-      detailRow("Total de custos", formatBRL(r.totalCosts)),
-      detailRow("Lucro líquido", formatBRL(r.netProfit), { highlight: true }),
-      detailRow("Lucro sobre custo", formatPercent(r.profitOverCostPct)),
-      detailRow("Margem líquida", formatPercent(r.netMarginPct))
-    );
-
-    card.append(name, price, bar, legend, details);
-
-    if (entry.captionNote) {
-      const caption = document.createElement("p");
-      caption.className = "compare-card__caption";
-      caption.textContent = entry.captionNote;
-      card.appendChild(caption);
-    }
+    card.addEventListener("click", () => openCardModal(entry, r, meta));
 
     fragment.appendChild(card);
   });

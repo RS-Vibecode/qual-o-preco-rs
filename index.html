@@ -116,6 +116,8 @@
       </div>
 
       <form id="pricing-form" novalidate>
+      <div class="calc-form-cols">
+      <div class="calc-form-col">
 
         <fieldset class="field-group">
           <legend class="field-group__title">
@@ -275,6 +277,9 @@
           </div>
         </fieldset>
 
+      </div>
+      <div class="calc-form-col">
+
         <fieldset class="field-group">
           <legend class="field-group__title">
             <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 6.5 12 11l9-4.5L12 2Zm-9 6.5v9L11 21v-8.9L3 8.5Zm18 0-8 3.6V21l8-3.5v-9Z"/></svg>
@@ -325,6 +330,9 @@
           </div>
         </fieldset>
 
+      </div>
+      </div>
+
         <div class="form-actions">
           <button type="submit" class="btn btn--primary">Calcular preço</button>
           <button type="button" class="btn btn--secondary" id="clear-btn">Nova simulação</button>
@@ -332,30 +340,37 @@
       </form>
     </section>
 
-    <aside class="calc-results-panel">
-      <div class="calc-results-panel__sticky">
-        <div class="results-empty reveal" id="resultsEmpty">
-          <svg class="results-empty__icon" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
-            <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 19V9m5 10V5m5 14v-7"/>
-          </svg>
-          <p class="results-empty__title">Seu preço aparece aqui</p>
-          <p class="results-empty__text">Preencha os dados do produto e clique em "Calcular preço" — o resultado no Mercado Livre aparece bem aqui do lado.</p>
-        </div>
-
-        <section class="results" id="results" aria-live="polite" hidden>
-          <div class="compare-intro">
-            <p class="compare-intro__title" id="compare-title" tabindex="-1">Seu preço por marketplace</p>
-            <p class="compare-intro__text">
-              O lucro líquido é o mesmo em todos — o markup incide sobre o custo, não sobre a taxa.
-              O que muda é o preço final e a taxa entre cada opção.
-            </p>
-          </div>
-          <div class="compare-grid" id="compareGrid"></div>
-        </section>
+    <div class="calc-results-block">
+      <div class="results-empty reveal" id="resultsEmpty">
+        <svg class="results-empty__icon" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+          <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 19V9m5 10V5m5 14v-7"/>
+        </svg>
+        <p class="results-empty__title">Seu preço aparece aqui</p>
+        <p class="results-empty__text">Preencha os dados do produto e clique em "Calcular preço" — o resultado de cada marketplace aparece logo abaixo.</p>
       </div>
-    </aside>
+
+      <section class="results" id="results" aria-live="polite" hidden>
+        <div class="compare-intro">
+          <p class="compare-intro__title" id="compare-title" tabindex="-1">Seu preço por marketplace</p>
+          <p class="compare-intro__text">
+            O lucro líquido é o mesmo em todos — o markup incide sobre o custo, não sobre a taxa.
+            O que muda é o preço final e a taxa entre cada opção. Toque num cartão para ver o detalhe completo.
+          </p>
+        </div>
+        <div class="compare-grid compare-grid--compact" id="compareGrid"></div>
+      </section>
+    </div>
 
   </div>
+
+  <dialog class="card-modal" id="cardModal">
+    <div class="card-modal__inner">
+      <button type="button" class="card-modal__close" id="cardModalClose" aria-label="Fechar detalhes">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="card-modal__content" id="cardModalContent"></div>
+    </div>
+  </dialog>
 </main>
 
 <footer class="site-footer">
