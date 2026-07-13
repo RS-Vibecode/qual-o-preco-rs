@@ -1496,14 +1496,22 @@ body.auth-pending main {
    um alvo de clique confiável pra "fechar ao clicar fora" (o
    ::backdrop de verdade não recebe click listener direto). */
 dialog.card-modal {
+  /* position:fixed + inset:0 em vez de width:100vw/height:100vh — 100vw
+     não desconta a faixa da barra de rolagem vertical da página, então
+     ficava um pouco mais largo que a tela de verdade e forçava uma barra
+     de rolagem horizontal indesejada. inset:0 (relativo à viewport, já
+     que o <dialog> vira position:fixed quando aberto com showModal())
+     não tem esse problema. */
+  position: fixed;
+  inset: 0;
   border: none;
   padding: 0;
   margin: 0;
   background: transparent;
-  width: 100vw;
-  height: 100vh;
-  max-width: 100vw;
-  max-height: 100vh;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
 }
 dialog.card-modal[open] {
   display: flex;

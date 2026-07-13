@@ -412,14 +412,18 @@ function resolveEntryPricing(entry, values, shippingCost) {
 }
 
 /**
- * Topo do cartão (selo de posição, selos de "menor preço"/"taxa real",
- * nome e preço) — compartilhado entre o cartão compacto (grade) e o
- * cartão completo (popup), pra não duplicar essa parte em dois lugares.
+ * Topo do cartão (selo de posição, selo de "menor preço", nome e preço) —
+ * compartilhado entre o cartão compacto (grade) e o cartão completo
+ * (popup), pra não duplicar essa parte em dois lugares.
  * `animateDelay` null = mostra o preço já pronto, sem a animação de
  * contagem (usado no popup, aberto sob demanda); um número = anima com
  * esse atraso em ms (usado na grade, no primeiro carregamento).
+ * `includeRealBadge` true só no cartão completo — o texto "Taxa real
+ * consultada agora" não cabe no cartão compacto (ficava cortado no meio
+ * da palavra); no compacto, o essencial já é nome + preço + selo de
+ * menor preço, o resto (inclusive esse selo) fica só no popup.
  */
-function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay }) {
+function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, includeRealBadge }) {
   const frag = document.createDocumentFragment();
 
   const rankBadge = document.createElement("span");
@@ -434,7 +438,7 @@ function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay }) {
     frag.appendChild(badge);
   }
 
-  if (entry.isRealFee) {
+  if (includeRealBadge && entry.isRealFee) {
     const realBadge = document.createElement("p");
     realBadge.className = "compare-card__real-badge";
     realBadge.textContent = "Taxa real consultada agora";
@@ -465,7 +469,7 @@ function buildFullCard(entry, r, meta) {
   const card = document.createElement("div");
   card.className = `compare-card brand--${entry.theme}`;
   if (meta.isBest) card.classList.add("compare-card--best");
-  card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: null }));
+  card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: null, includeRealBadge: true }));
 
   const { bar, legend } = buildBreakdownBar(r);
   const details = document.createElement("dl");
