@@ -1607,11 +1607,12 @@ dialog.card-modal::backdrop {
   display: inline-flex;
   align-items: center;
   gap: 0.3em;
+  max-width: 100%;
   font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  white-space: nowrap;
+  white-space: normal;
   background: var(--green);
   color: #0b2416;
   padding: 0.3rem 0.65rem;

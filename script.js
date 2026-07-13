@@ -422,19 +422,30 @@ function resolveEntryPricing(entry, values, shippingCost) {
  * consultada agora" não cabe no cartão compacto (ficava cortado no meio
  * da palavra); no compacto, o essencial já é nome + preço + selo de
  * menor preço, o resto (inclusive esse selo) fica só no popup.
+ * `compact` true no cartão da grade: o círculo de posição e o selo de
+ * "menor preço" competiam pelo mesmo canto num cartão estreito e ficavam
+ * um em cima do outro — no compacto, quando o cartão é o mais barato, o
+ * selo substitui o número (ele já deixa claro que é o primeiro colocado)
+ * em vez de competir com ele; nos outros cartões, só o número aparece,
+ * sem selo. O texto do selo também fica mais curto no compacto.
  */
-function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, includeRealBadge }) {
+function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, includeRealBadge, compact }) {
   const frag = document.createDocumentFragment();
 
-  const rankBadge = document.createElement("span");
-  rankBadge.className = "compare-card__rank";
-  rankBadge.textContent = String(rank);
-  frag.appendChild(rankBadge);
+  if (!(compact && isBest)) {
+    const rankBadge = document.createElement("span");
+    rankBadge.className = "compare-card__rank";
+    rankBadge.textContent = String(rank);
+    frag.appendChild(rankBadge);
+  }
 
   if (isBest) {
+    const tied = tiedCount > 1;
     const badge = document.createElement("p");
     badge.className = "compare-card__badge";
-    badge.textContent = tiedCount > 1 ? "Valores empatados" : "Menor preço ao cliente";
+    badge.textContent = compact
+      ? (tied ? "Empate" : "Menor preço")
+      : (tied ? "Valores empatados" : "Menor preço ao cliente");
     frag.appendChild(badge);
   }
 
@@ -469,7 +480,7 @@ function buildFullCard(entry, r, meta) {
   const card = document.createElement("div");
   card.className = `compare-card brand--${entry.theme}`;
   if (meta.isBest) card.classList.add("compare-card--best");
-  card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: null, includeRealBadge: true }));
+  card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: null, includeRealBadge: true, compact: false }));
 
   const { bar, legend } = buildBreakdownBar(r);
   const details = document.createElement("dl");
@@ -553,7 +564,7 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
       card.style.setProperty("--stagger", `${stagger}ms`);
     }
 
-    card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: prefersReducedMotion ? null : stagger }));
+    card.appendChild(buildCardTop({ entry, r, ...meta, animateDelay: prefersReducedMotion ? null : stagger, compact: true }));
 
     const hint = document.createElement("span");
     hint.className = "compare-card__hint";
