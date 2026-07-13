@@ -388,7 +388,14 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
     r: resolveEntryPricing(entry, values, shippingCost),
   })).sort((a, b) => a.r.suggestedPrice - b.r.suggestedPrice);
 
-  const cheapestPrice = computed[0].r.suggestedPrice;
+  // Compara pelo valor arredondado em centavos (o que o usuário efetivamente
+  // vê na tela) — dois marketplaces com a mesma taxa percentual costumam
+  // convergir pro mesmíssimo preço, mas ruído de ponto flutuante entre
+  // caminhos de cálculo diferentes (ex.: iteração da Amazon vs. do ML)
+  // podia deixar de detectar isso por centésimos de centavo.
+  const toCents = (value) => Math.round(value * 100);
+  const cheapestCents = toCents(computed[0].r.suggestedPrice);
+  const tiedCount = computed.filter(({ r }) => toCents(r.suggestedPrice) === cheapestCents).length;
 
   const grid = document.getElementById("compareGrid");
   grid.replaceChildren();
@@ -396,7 +403,7 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
 
   computed.forEach(({ entry, r }, index) => {
     const rank = index + 1;
-    const isBest = r.suggestedPrice === cheapestPrice;
+    const isBest = toCents(r.suggestedPrice) === cheapestCents;
     const stagger = index * 70;
 
     const card = document.createElement("article");
@@ -414,7 +421,7 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
     if (isBest) {
       const badge = document.createElement("p");
       badge.className = "compare-card__badge";
-      badge.textContent = "Menor preço ao cliente";
+      badge.textContent = tiedCount > 1 ? "Valores empatados" : "Menor preço ao cliente";
       card.appendChild(badge);
     }
 

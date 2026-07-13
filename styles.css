@@ -929,18 +929,43 @@ body.auth-pending main {
   color: #17233d;
   --brand-glow: rgba(255, 241, 89, 0.25);
 }
+/* Cores oficiais da Amazon: fundo branco (como a própria loja), preço no
+   vermelho característico deles ("Amazon deal red"), navy + laranja como
+   acento — bem mais reconhecível que um tom pastel genérico. */
 .brand--amazon {
-  background: #f7dfc4;
-  color: #17233d;
-  --brand-glow: rgba(255, 153, 0, 0.22);
+  background: #FFFFFF;
+  color: #0F1111;
+  border: 2px solid #131921;
+  --brand-glow: rgba(255, 153, 0, 0.3);
+}
+.brand--amazon .compare-card__price {
+  color: #B12704;
+}
+.brand--amazon .compare-card__rank {
+  background: #131921;
+  color: #FF9900;
 }
 .brand--amazon .compare-card__badge,
 .brand--amazon .compare-card__real-badge {
   background: #131921;
-  color: #ff9900;
+  color: #FF9900;
 }
 .brand--amazon .compare-card__badge::before {
-  color: #ff9900;
+  color: #FF9900;
+}
+.brand--amazon .compare-card__name {
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+.brand--amazon .compare-card__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 2px;
+  background: #FF9900;
 }
 
 .field__reference {
