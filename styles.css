@@ -1,0 +1,1980 @@
+/* ===========================================================
+   Qual o Preço? | RS Soluções Digitais
+   Tokens: Manual de Marca RS (2026) + linguagem visual do site
+   institucional rssolucoesdigitais.com.br (tema escuro, azul
+   como acento primário, cartões em vidro, campo estelar sutil).
+   =========================================================== */
+
+/* Fontes hospedadas localmente (assets/fonts) — nenhuma requisição
+   a domínios externos, o que permite um CSP sem exceções de origem
+   para style-src/font-src. Subconjunto "latin" do Google Fonts,
+   cobre integralmente os acentos do português (U+0000–00FF). */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/Inter-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/Inter-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/Inter-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/Inter-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Epilogue";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/Epilogue-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Epilogue";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/Epilogue-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Epilogue";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/Epilogue-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Epilogue";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/Epilogue-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Epilogue";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("assets/fonts/Epilogue-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: "League Spartan";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/LeagueSpartan-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "League Spartan";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("assets/fonts/LeagueSpartan-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/PlayfairDisplay-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/PlayfairDisplay-Italic400.woff2") format("woff2");
+}
+
+/* ===========================================================
+   Sistema de dois temas (claro = padrão, escuro = alternativa via
+   botão). Ambos os blocos definem exatamente os mesmos tokens — o
+   resto do CSS inteiro usa var(--token) e nunca precisa saber qual
+   tema está ativo. data-theme é aplicado em <html> por theme-init.js
+   (roda antes do CSS pintar a página, sem script inline, pra não
+   violar o CSP script-src 'self') e alternado pelo botão no cabeçalho
+   (ver auth-guard.js / login.js).
+   =========================================================== */
+:root {
+  /* ===== Tema claro (padrão) — paleta exata do Manual de Marca RS (2026):
+     primárias #1B1B4F/#E8A020/#FFFFFF, secundárias #2880B9/#7FB3E0/#003B70/
+     #070E18, apoio #7B8EC7/#0D2D3E/#0B0532/#F4F3F3. ===== */
+  --bg: #F4F3F3;
+  --bg-2: #FFFFFF;
+  --bg-3: #FFFFFF;   /* cartões */
+  --bg-4: #ECECF6;   /* inputs / hover */
+
+  --navy: #1B1B4F;   /* tinta de marca — títulos grandes, blocos sólidos */
+  --blue: #2880B9;
+  --blue-2: #003B70;
+  --blue-light: #7FB3E0;
+  --indigo: #7B8EC7; /* cor de apoio — acentos discretos, badges */
+  --amber: #E8A020;  /* cor primária do manual — CTA principal */
+  --amber-light: #F3C263;
+  --green: #1F9D5C;
+
+  --text-1: #0B0532;
+  --text-2: #55547E;
+  --white: #FFFFFF;
+
+  --border-soft: rgba(27, 27, 79, 0.09);
+  --border-strong: rgba(27, 27, 79, 0.18);
+
+  --color-error: #DC2626;
+  --color-error-bg: rgba(220, 38, 38, 0.08);
+  --color-error-border: rgba(220, 38, 38, 0.28);
+
+  --gradient-primary: linear-gradient(135deg, #F0B429, #E8A020);
+  --body-gradient: linear-gradient(165deg, #FDF6E8 0%, #F4F3F3 32%, var(--bg) 62%, #EDEFFA 100%);
+  --hero-gradient: radial-gradient(ellipse 120% 100% at 50% 0%, #FDF6E8 0%, transparent 70%);
+  --card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.88));
+  --grid-line: rgba(27, 27, 79, 0.06);
+
+  --shadow-card: 0 16px 40px -12px rgba(11, 5, 50, 0.14), 0 2px 8px rgba(11, 5, 50, 0.06);
+  --shadow-card-amber: 0 16px 40px -12px rgba(232, 160, 32, 0.22);
+  --shadow-cta: 0 4px 18px rgba(232, 160, 32, 0.35);
+  --shadow-cta-hover: 0 8px 26px rgba(232, 160, 32, 0.45);
+}
+
+:root[data-theme="dark"] {
+  /* ===== Tema escuro (alternativa) — mesma paleta do manual, aplicada
+     invertida: #0B0532/#1B1B4F substituem o azul genérico usado antes. ===== */
+  --bg: #0B0532;
+  --bg-2: #120B42;
+  --bg-3: #1B1B4F;
+  --bg-4: #24215E;
+
+  --navy: #7FB3E0;
+  --blue: #2880B9;
+  --blue-2: #7FB3E0;
+  --blue-light: #A7CCEB;
+  --indigo: #9CA6E0;
+  --amber: #E8A020;
+  --amber-light: #F3C263;
+  --green: #6FCE96;
+
+  --text-1: #F4F3F3;
+  --text-2: #AAA9D4;
+  --white: #FFFFFF;
+
+  --border-soft: rgba(127, 179, 224, 0.16);
+  --border-strong: rgba(127, 179, 224, 0.34);
+
+  --color-error: #F87171;
+  --color-error-bg: rgba(248, 113, 113, 0.1);
+  --color-error-border: rgba(248, 113, 113, 0.4);
+
+  --gradient-primary: linear-gradient(135deg, #F0B429, #E8A020);
+  --body-gradient: linear-gradient(165deg, #150c4a 0%, #0f0a3d 22%, var(--bg) 55%, #08051f 100%);
+  --hero-gradient: radial-gradient(ellipse 120% 100% at 50% 0%, #150c4a 0%, transparent 70%);
+  --card-bg: linear-gradient(180deg, rgba(27, 27, 79, 0.88), rgba(18, 11, 66, 0.9));
+  --grid-line: rgba(127, 179, 224, 0.09);
+
+  --shadow-card: 0 24px 70px rgba(0, 0, 0, 0.5), 0 4px 24px rgba(127, 179, 224, 0.1);
+  --shadow-card-amber: 0 24px 70px rgba(0, 0, 0, 0.5), 0 4px 28px rgba(232, 160, 32, 0.14);
+  --shadow-cta: 0 4px 24px rgba(232, 160, 32, 0.4);
+  --shadow-cta-hover: 0 8px 32px rgba(232, 160, 32, 0.55);
+}
+
+:root {
+  /* Tipografia — League Spartan é a fonte primária de título do Manual
+     de Marca RS (2026): "Aa" 1 = conteúdo/proximidade. Space Grotesk e
+     Epilogue seguem como fallback para números/labels que já usavam
+     essas famílias. Playfair Display é a fonte terciária do manual,
+     reservada para frases de manifesto/destaque emocional (itálico). */
+  --font-display: "League Spartan", "Space Grotesk", "Epilogue", "Arial Black", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-accent: "Playfair Display", Georgia, "Times New Roman", serif;
+
+  /* Espaçamento */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3.5rem;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  /* Cantos assimétricos (um canto "puxado") para tirar a sensação de caixa
+     quadrada dos cartões — um recurso comum em UIs premium recentes. */
+  --radius-organic: 32px 32px 32px 10px;
+  --radius-organic-alt: 32px 10px 32px 32px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 500ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  --content-max: 720px;
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--body-gradient);
+  color: var(--text-1);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+button { font-family: inherit; }
+h1, h2, p, dl, dd { margin: 0; }
+
+/* Atmosfera ambiente por trás de toda a página (não só do herói) — evita a
+   sensação de "caixas empilhadas" sobre um fundo plano. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(620px circle at 12% 15%, rgba(40, 128, 185, 0.2), transparent 60%),
+    radial-gradient(560px circle at 88% 42%, rgba(123, 142, 199, 0.2), transparent 60%),
+    radial-gradient(520px circle at 25% 92%, rgba(232, 160, 32, 0.15), transparent 60%),
+    radial-gradient(480px circle at 95% 95%, rgba(111, 206, 150, 0.12), transparent 60%);
+  animation: drift 22s ease-in-out infinite;
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-2%, 2%) scale(1.06); }
+}
+
+/* Trama de grade (blueprint) — reforça o arquétipo Sábio/Governante do
+   manual de marca (estrutura, organização, controle): um traço fino
+   demais para "decorar", mas que dá ao fundo uma textura construída em
+   vez de um gradiente liso. Esmaece nas bordas via mask pra não competir
+   com o conteúdo. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, black 0%, transparent 75%);
+}
+
+/* ===== Componente de marca: parágrafo com régua lateral =====
+   Motivo visual recorrente do próprio Manual de Marca RS (cada bloco de
+   texto institucional é marcado por um traço vertical à esquerda) —
+   reaproveitado aqui como um "selo de autoria" em pontos-chave da UI. */
+.brand-rule {
+  border-left: 3px solid var(--amber);
+  padding-left: var(--space-4);
+  text-align: left;
+}
+.brand-rule--quote {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--white);
+  color: var(--bg);
+  padding: var(--space-3) var(--space-4);
+  z-index: 100;
+  border-radius: 0 0 var(--radius-sm) 0;
+  font-weight: 600;
+}
+.skip-link:focus { left: 0; }
+
+:focus-visible {
+  outline: 2px solid var(--blue-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.comet-wrap {
+  position: absolute;
+  pointer-events: none;
+}
+.comet {
+  display: block;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(127, 179, 224, 0.85) 55%, #eaf6ff 100%);
+  filter: drop-shadow(0 0 5px rgba(127, 179, 224, 0.75));
+  opacity: 0;
+  animation: comet-fly var(--dur, 4s) linear var(--delay, 0s) infinite;
+  will-change: transform, opacity;
+}
+@keyframes comet-fly {
+  0% { opacity: 0; transform: translateX(0) scaleX(0.3); }
+  8% { opacity: 1; transform: translateX(30px) scaleX(1); }
+  65% { opacity: 0.65; }
+  100% { opacity: 0; transform: translateX(420px) scaleX(1); }
+}
+
+/* ===== Header ===== */
+.site-header {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-soft);
+  padding: var(--space-4) var(--space-5);
+  position: relative;
+  z-index: 2;
+}
+.site-header__inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  row-gap: var(--space-3);
+}
+.site-header__logo {
+  height: 60px;
+  width: auto;
+}
+
+/* ===== Chip de usuário logado (cabeçalho) ===== */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
+  justify-content: flex-end;
+}
+@media (max-width: 480px) {
+  .user-chip__info { display: none; }
+}
+.user-chip__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-4);
+  border: 1.5px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-chip__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-chip__avatar span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--blue-2);
+  font-size: 0.95rem;
+}
+.user-chip__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+.user-chip__name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+.user-chip__role {
+  font-size: 0.75rem;
+  color: var(--blue-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.user-chip__admin-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--blue-2);
+  text-decoration: none;
+  padding: 0.45rem 0.8rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.user-chip__admin-link:hover {
+  background: rgba(40, 128, 185, 0.1);
+  border-color: var(--blue-2);
+}
+.user-chip__logout {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.user-chip__logout:hover {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: var(--color-error-border);
+  color: var(--color-error);
+}
+
+/* Esconde o conteúdo principal até auth-guard.js confirmar a sessão —
+   evita mostrar a página protegida por um instante antes do redirect
+   pro login (ver auth-guard.js). */
+body.auth-pending main {
+  visibility: hidden;
+}
+
+/* ===== Hero (com campo estelar e brilhos, inspirado no site institucional) =====
+   A própria silhueta do herói termina em curva (clip-path com SVG
+   <clipPath objectBoundingBox>, 100% responsivo), em vez de uma aresta
+   reta — o cartão do formulário sobrepõe o herói (ver .page-container)
+   para dar profundidade em camadas. */
+.hero {
+  position: relative;
+  z-index: 1;
+  background: var(--hero-gradient);
+  padding: var(--space-7) var(--space-5) calc(var(--space-8) + 70px);
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: url(#heroWaveClip);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-4);
+  color: var(--text-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.theme-toggle:hover {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.site-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Logo tem uma versão por tema (a navy é ilegível em fundo claro, a
+   branca é ilegível em fundo escuro) — troca via CSS, sem re-render. */
+.logo--dark { display: none; }
+:root[data-theme="dark"] .logo--light { display: none; }
+:root[data-theme="dark"] .logo--dark { display: block; }
+
+.starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Céu estrelado é uma decoração de tema escuro — no tema claro (padrão
+   agora) essa camada some, sem afetar .glow (os brilhos coloridos
+   continuam nos dois temas, servindo de "blob" suave também no claro). */
+:root:not([data-theme="dark"]) .starfield {
+  display: none;
+}
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--white);
+  animation: twinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%, to { opacity: 0.15; }
+  50% { opacity: 0.9; }
+}
+
+.glow {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+  animation: float 7s ease-in-out infinite;
+}
+.glow--1 {
+  background: rgba(40, 128, 185, 0.28);
+  top: -120px;
+  left: -80px;
+}
+.glow--2 {
+  background: rgba(123, 142, 199, 0.22);
+  bottom: -160px;
+  right: -100px;
+  animation-delay: 2.5s;
+}
+@keyframes float {
+  0%, to { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  animation: hero-in var(--transition-slow) both;
+}
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue-2);
+  background: rgba(40, 128, 185, 0.1);
+  border: 1px solid var(--border-strong);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: var(--space-4);
+}
+.hero__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.hero__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.75rem;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+  margin-bottom: var(--space-3);
+}
+.hero__subtitle {
+  font-size: 1.1rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-1);
+}
+.hero__tagline {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--blue-2);
+}
+
+@media (min-width: 640px) {
+  .hero__title { font-size: 3.5rem; }
+  .hero__subtitle { font-size: 1.2rem; }
+}
+
+/* ===== Page container =====
+   Cada seção principal (form / resultados / atenção) tem seu próprio
+   contêiner de largura, em vez de um único wrapper flex — os cartões de
+   comparação precisam de bem mais largura que o formulário (720px fica
+   apertado com 2-3 cartões lado a lado), então viram um contêiner à parte,
+   mais largo, sem afetar a largura do formulário nem do card de atenção. */
+.page-container {
+  position: relative;
+  z-index: 1;
+  max-width: var(--content-max);
+  margin: -88px auto 0;
+  padding: 0 var(--space-4);
+  box-sizing: border-box;
+}
+
+/* Respiro fixo antes do rodapé — sem isso, quando a seção de resultados
+   está oculta (ainda não calculou nada), o cartão do formulário encosta
+   direto na borda superior do rodapé (.site-footer tem border-top),
+   ficando com uma linha cortando o canto do cartão. */
+#conteudo-principal {
+  padding-bottom: var(--space-8);
+}
+
+/* ===== Layout da calculadora: formulário + resultado lado a lado =====
+   Em telas largas, o resultado fica "grudado" (sticky) ao lado do
+   formulário em vez de exigir rolar a página inteira pra ver o preço —
+   o formulário costuma ser mais alto que o painel de resultado, então é
+   ele que "acompanha" o scroll dentro da própria altura do formulário. */
+.calc-layout {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: -88px auto 0;
+  padding: 0 var(--space-4);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+@media (min-width: 1080px) {
+  .calc-layout {
+    grid-template-columns: minmax(420px, 480px) 1fr;
+    gap: var(--space-7);
+  }
+}
+
+.calc-form-card {
+  min-width: 0;
+}
+
+.calc-results-panel {
+  min-width: 0;
+}
+.calc-results-panel__sticky {
+  position: relative;
+}
+@media (min-width: 1080px) {
+  .calc-results-panel__sticky {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+.results-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-6);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-organic);
+  color: var(--text-2);
+}
+.results-empty__icon {
+  color: var(--blue-2);
+  opacity: 0.6;
+}
+.results-empty__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-1);
+}
+.results-empty__text {
+  font-size: 0.9rem;
+  max-width: 340px;
+}
+
+.results {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.narrow-container {
+  position: relative;
+  z-index: 1;
+  max-width: var(--content-max);
+  margin: var(--space-6) auto 0;
+  padding: 0 var(--space-4) var(--space-8);
+  box-sizing: border-box;
+}
+
+/* ===== Reveal on scroll ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Card (vidro escuro, como os cartões do site institucional) ===== */
+.card {
+  position: relative;
+  background: var(--card-bg);
+  border-radius: var(--radius-organic);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6) var(--space-5);
+  backdrop-filter: blur(16px);
+  overflow: visible;
+}
+.card::before,
+.result-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: var(--gradient-primary);
+  opacity: 0.7;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.card__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-5);
+}
+.card__sticker {
+  position: absolute;
+  top: -14px;
+  right: 28px;
+  transform: rotate(6deg);
+  background: var(--amber);
+  color: #17233d;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(232, 160, 32, 0.4);
+  z-index: 2;
+}
+
+/* ===== Grupos do formulário (fieldset/legend) =====
+   Quebra a "parede" de campos em seções com título, pra dar hierarquia
+   visual — sem esconder/expandir nada (sem JS extra), só separação. */
+.field-group {
+  border: none;
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  min-width: 0;
+}
+.field-group + .field-group {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-soft);
+}
+.field-group__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue-2);
+  padding: 0;
+  margin-bottom: var(--space-4);
+  width: 100%;
+}
+.field-group__icon {
+  flex-shrink: 0;
+}
+.field-group__badge {
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-2);
+  background: var(--bg-4);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+.field-group .field:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== Form fields ===== */
+.field {
+  margin-bottom: var(--space-5);
+}
+.field label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-2);
+}
+.input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-4);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  overflow: hidden;
+}
+.input-wrap:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(40, 128, 185, 0.25);
+}
+.input-affix {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--blue-2);
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.input-affix--prefix { border-right: 1.5px solid var(--border-soft); }
+.input-affix--suffix { border-left: 1.5px solid var(--border-soft); }
+
+.input-wrap input,
+.input-wrap select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.85rem var(--space-4);
+  font-size: 1.05rem;
+  font-family: var(--font-body);
+  color: var(--text-1);
+}
+.input-wrap select {
+  cursor: pointer;
+}
+.input-wrap select option {
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+
+.input-toggle-visibility {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.input-toggle-visibility:hover {
+  color: var(--blue-2);
+}
+.input-toggle-visibility__slash {
+  position: absolute;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+.input-wrap input::placeholder {
+  color: rgba(141, 155, 176, 0.55);
+}
+
+.field__optional {
+  font-weight: 400;
+  color: var(--text-2);
+  font-size: 0.85em;
+}
+
+/* Cor oficial da marca, usada nos cartões de comparação apenas para
+   identificação visual — nenhuma afiliação com o Mercado Livre é
+   implicada. --brand-glow alimenta a sombra colorida do .compare-card. */
+.brand--meli {
+  background: #fff159;
+  color: #17233d;
+  --brand-glow: rgba(255, 241, 89, 0.25);
+}
+.brand--amazon {
+  background: #f7dfc4;
+  color: #17233d;
+  --brand-glow: rgba(255, 153, 0, 0.22);
+}
+.brand--amazon .compare-card__badge,
+.brand--amazon .compare-card__real-badge {
+  background: #131921;
+  color: #ff9900;
+}
+.brand--amazon .compare-card__badge::before {
+  color: #ff9900;
+}
+
+.field__reference {
+  font-size: 0.83rem;
+  color: var(--blue-2);
+  margin-top: var(--space-2);
+  background: rgba(40, 128, 185, 0.08);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.field__help {
+  font-size: 0.83rem;
+  color: var(--text-2);
+  margin-top: var(--space-2);
+}
+
+.field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-error);
+  margin-top: var(--space-2);
+}
+.field__error::before {
+  content: "⚠";
+  flex-shrink: 0;
+}
+
+.field.has-error .input-wrap {
+  border-color: var(--color-error-border);
+  background: var(--color-error-bg);
+}
+.field.has-error .input-affix {
+  background: transparent;
+  color: var(--color-error);
+}
+.field.has-error label {
+  color: var(--color-error);
+}
+
+/* ===== Autocomplete de categoria do Mercado Livre ===== */
+.category-suggestions {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0.35rem;
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-4);
+  max-height: 220px;
+  overflow-y: auto;
+}
+.category-suggestions__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text-1);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.category-suggestions__item:hover,
+.category-suggestions__item:focus-visible {
+  background: rgba(40, 128, 185, 0.14);
+}
+
+.category-selected {
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.dimensions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dimensions-row .input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.dimensions-row__times {
+  color: var(--text-2);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ===== Buttons ===== */
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+@media (min-width: 480px) {
+  .form-actions { flex-direction: row; }
+}
+/* A partir de 1080px o .calc-layout vira 2 colunas e o cartão do
+   formulário fica mais estreito (~420-480px, ver .calc-layout) — não
+   sobra largura pros dois botões lado a lado sem quebrar o texto.
+   Abaixo de 1080px o cartão ainda ocupa a tela quase toda (coluna
+   única), aí o par lado a lado cabe bem — só forço empilhado no
+   breakpoint estreito. */
+@media (min-width: 1080px) {
+  .calc-form-card .form-actions {
+    flex-direction: column;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.95rem var(--space-5);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+  min-height: 48px;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn--primary {
+  position: relative;
+  background: var(--gradient-primary);
+  color: var(--white);
+  flex: 1.4;
+  box-shadow: var(--shadow-cta);
+  overflow: hidden;
+}
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left var(--transition-slow);
+}
+.btn--primary:hover {
+  box-shadow: var(--shadow-cta-hover);
+  transform: translateY(-2px);
+}
+.btn--primary:hover::after {
+  left: 130%;
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--text-1);
+  border: 1.5px solid var(--border-strong);
+  flex: 1;
+}
+.btn--secondary:hover {
+  background: rgba(40, 128, 185, 0.08);
+  border-color: var(--blue-2);
+}
+
+.btn--sm {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+}
+
+.btn--danger {
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+.btn--danger:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+}
+
+/* ===== Results ===== */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: fade-in var(--transition-slow);
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-hero {
+  position: relative;
+  background: linear-gradient(160deg, #14233b 0%, #0d1826 100%);
+  border: 1px solid var(--border-soft);
+  /* Canto cortado, como uma etiqueta de preço — combina com o tema da
+     ferramenta e quebra a monotonia dos cantos arredondados dos outros
+     cartões. */
+  clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%);
+  padding: var(--space-6) var(--space-5) var(--space-6) var(--space-5);
+  padding-top: calc(var(--space-6) + 10px);
+  text-align: center;
+  box-shadow: var(--shadow-card-amber);
+}
+.result-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(232, 160, 32, 0.14), transparent 60%);
+  pointer-events: none;
+}
+.result-hero::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.result-hero--pulse {
+  animation: result-pulse 900ms ease-out;
+}
+@keyframes result-pulse {
+  0% { box-shadow: var(--shadow-card), 0 0 0 0 rgba(232, 160, 32, 0.45); }
+  100% { box-shadow: var(--shadow-card), 0 0 0 26px rgba(232, 160, 32, 0); }
+}
+.result-hero__label {
+  position: relative;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue-2);
+  margin-bottom: var(--space-2);
+}
+.result-hero__value {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.75rem;
+  color: var(--amber);
+  line-height: 1.1;
+  text-shadow: 0 0 40px rgba(232, 160, 32, 0.35);
+}
+.result-hero__value:focus { outline: none; }
+.result-hero__caption {
+  position: relative;
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+@media (min-width: 480px) {
+  .result-hero__value { font-size: 3.25rem; }
+}
+
+.result-grid {
+  position: relative;
+  overflow: visible;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  background: linear-gradient(180deg, rgba(17, 31, 49, 0.9), rgba(13, 22, 33, 0.9));
+  border-radius: var(--radius-organic);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  backdrop-filter: blur(16px);
+}
+@media (min-width: 560px) {
+  .result-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--border-soft);
+  transition: background-color var(--transition-fast);
+  border-radius: var(--radius-sm);
+}
+.result-item:hover {
+  background: rgba(40, 128, 185, 0.06);
+}
+.result-item dt {
+  font-size: 0.88rem;
+  color: var(--text-2);
+}
+.result-item dd {
+  font-weight: 700;
+  color: var(--text-1);
+  font-size: 1rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.result-item--highlight dd {
+  color: var(--green);
+}
+
+/* ===== Comparação entre marketplaces =====
+   Sempre mostra todos os marketplaces cadastrados (marketplace-fees.js),
+   ordenados do menor para o maior preço ao cliente — o lucro líquido é
+   igual em todos (markup sobre o custo), então o que diferencia cada
+   cartão de verdade é esse preço. */
+.compare-intro {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+.compare-intro__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-2);
+}
+.compare-intro__title:focus { outline: none; }
+.compare-intro__text {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+@media (min-width: 640px) and (max-width: 1079px) {
+  .compare-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.compare-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: var(--space-7) var(--space-6) var(--space-6);
+  box-shadow: 0 20px 45px -10px var(--brand-glow, rgba(0, 0, 0, 0.5)), 0 4px 16px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: card-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--stagger, 0ms);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.compare-card:hover {
+  transform: translateY(-4px);
+}
+.compare-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, transparent 32%);
+  pointer-events: none;
+}
+.compare-card--best {
+  box-shadow: 0 24px 55px -8px var(--brand-glow, rgba(0, 0, 0, 0.5)), 0 0 0 2px var(--green);
+}
+
+.compare-card__rank {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.compare-card__badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: var(--green);
+  color: #0b2416;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  margin-bottom: var(--space-4);
+}
+.compare-card__badge::before {
+  content: "★";
+}
+.compare-card__real-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: var(--blue-light);
+  color: #06213b;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  margin-bottom: var(--space-4);
+}
+.compare-card__real-badge::before {
+  content: "✓";
+}
+.compare-card__name {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: var(--space-3);
+  padding-right: 36px;
+}
+.compare-card__price {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  margin-bottom: var(--space-5);
+}
+
+/* Barra proporcional: de onde vem cada real do preço final (custo,
+   taxas do ML, frete, lucro) — um resumo visual instantâneo antes de
+   descer pros números exatos na grade abaixo. As quatro fatias somam
+   exatamente o preço final (ver renderAllMarketplaces em script.js). */
+.compare-card__breakdown {
+  position: relative;
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+  background: rgba(11, 22, 40, 0.12);
+}
+.compare-card__breakdown-segment {
+  height: 100%;
+  min-width: 3px;
+  transition: flex-basis var(--transition-slow);
+}
+.compare-card__breakdown-segment--cost { background: rgba(11, 22, 40, 0.62); }
+.compare-card__breakdown-segment--fees { background: rgba(11, 22, 40, 0.34); }
+.compare-card__breakdown-segment--shipping { background: rgba(11, 22, 40, 0.16); }
+.compare-card__breakdown-segment--profit { background: #1f9d5c; }
+
+.compare-card__legend {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: 0.72rem;
+  color: #17233d;
+  opacity: 0.75;
+  margin-bottom: var(--space-5);
+}
+.compare-card__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+.compare-card__legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.compare-card__legend i.cost { background: rgba(11, 22, 40, 0.62); }
+.compare-card__legend i.fees { background: rgba(11, 22, 40, 0.34); }
+.compare-card__legend i.shipping { background: rgba(11, 22, 40, 0.16); }
+.compare-card__legend i.profit { background: #1f9d5c; }
+
+.compare-card__details {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4) var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(11, 22, 40, 0.14);
+}
+.compare-card__details > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.compare-card__details dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.65;
+}
+.compare-card__details dd {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compare-card__details dd.compare-card__dd--highlight {
+  color: #0b5c30;
+  font-size: 1.05rem;
+}
+
+.compare-card__caption {
+  position: relative;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(11, 22, 40, 0.14);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  border-top: 1px solid var(--border-soft);
+}
+.site-footer__logo {
+  height: 36px;
+  width: auto;
+  margin-bottom: var(--space-1);
+}
+.site-footer__tagline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--blue-2);
+}
+.site-footer__text {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  max-width: 420px;
+}
+
+.site-footer__contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+}
+.site-footer__contact a {
+  color: var(--text-1);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.site-footer__contact a:hover {
+  color: var(--blue-2);
+  border-color: var(--blue-2);
+}
+.site-footer__dot {
+  color: var(--text-2);
+}
+
+.site-footer__legal {
+  margin-top: var(--space-3);
+  font-size: 0.75rem;
+  color: var(--text-2);
+  opacity: 0.8;
+}
+
+/* ===== Conexão do usuário com o Mercado Livre ===== */
+.ml-connect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  background: var(--bg-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.ml-connect--connected {
+  background: rgba(111, 206, 150, 0.08);
+  border-color: rgba(111, 206, 150, 0.32);
+}
+.ml-connect__title {
+  font-weight: 700;
+  color: var(--text-1);
+  font-size: 0.95rem;
+}
+.ml-connect__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0b2416;
+  background: var(--green);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  margin-right: var(--space-2);
+}
+.ml-connect__subtitle {
+  font-size: 0.83rem;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* ===== Login (auth) — vitrine em duas colunas =====
+   Painel esquerdo é uma identidade fixa da marca (sempre nas cores do
+   manual, independente do tema claro/escuro escolhido pelo usuário —
+   como um pôster); o lado do formulário segue o tema normalmente. */
+.auth-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 960px) {
+  .auth-shell {
+    grid-template-columns: minmax(400px, 40%) 1fr;
+  }
+}
+
+.auth-brand {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(160deg, #23225f 0%, #1B1B4F 45%, #0B0532 100%);
+  color: #fff;
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+@media (min-width: 640px) {
+  .auth-brand { padding: var(--space-7) var(--space-7) var(--space-6); }
+}
+
+.auth-brand__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(ellipse 90% 80% at 15% 10%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 15% 10%, black 0%, transparent 75%);
+}
+.auth-brand__glow {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(90px);
+  background: radial-gradient(circle, rgba(232, 160, 32, 0.32), transparent 65%);
+  bottom: -160px;
+  left: -120px;
+}
+
+.auth-brand__top {
+  position: relative;
+  z-index: 1;
+}
+.auth-brand__logo {
+  height: 40px;
+  width: auto;
+}
+
+.auth-brand__body {
+  position: relative;
+  z-index: 1;
+}
+.auth-brand__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber-light);
+  margin-bottom: var(--space-4);
+}
+.auth-brand__title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin-bottom: var(--space-4);
+}
+.auth-brand__title span {
+  color: var(--amber);
+}
+.auth-brand__quote {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--amber-light);
+  border-left: 3px solid var(--amber);
+  padding-left: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.auth-brand__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 380px;
+}
+.auth-brand__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+.auth-brand__num {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #1B1B4F;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+.auth-brand__footer {
+  position: relative;
+  z-index: 1;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.auth-formside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  background: var(--bg);
+}
+.auth-formside__toggle {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+}
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+}
+.auth-formside__legal {
+  margin-top: var(--space-6);
+  max-width: 420px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-2);
+  opacity: 0.8;
+}
+.auth-card__subtitle {
+  color: var(--text-2);
+  font-size: 0.92rem;
+  margin-top: calc(var(--space-2) * -1);
+  margin-bottom: var(--space-5);
+}
+.auth-card__form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.auth-card__form-error::before {
+  content: "⚠";
+  flex-shrink: 0;
+}
+
+.admin-page {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-7) 0 var(--space-8);
+}
+.admin-page .page-container {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.admin-page__form-card {
+  max-width: 560px;
+}
+
+/* Layout do painel de usuários (só admin.html — profile.html usa o
+   .page-container "normal", 1 cartão só, e não deve virar grade).
+   Formulário à esquerda (largura de formulário) e tabela à direita
+   (largura livre) em vez de dois cartões empilhados com larguras bem
+   diferentes, que ficava desequilibrado visualmente. */
+.page-container.admin-manage-layout {
+  max-width: 1080px;
+}
+@media (min-width: 880px) {
+  .page-container.admin-manage-layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 400px) 1fr;
+    align-items: start;
+  }
+  .admin-manage-layout .admin-page__intro {
+    grid-column: 1 / -1;
+  }
+  .admin-manage-layout .admin-page__form-card {
+    max-width: none;
+  }
+}
+.admin-manage-layout .admin-page__wide-card {
+  grid-column: 1 / -1;
+}
+
+.field-row {
+  display: flex;
+  gap: var(--space-3);
+}
+.field-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue-2);
+  margin-bottom: var(--space-3);
+}
+.page-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.admin-page__intro {
+  max-width: 560px;
+}
+.admin-page__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  color: var(--text-1);
+  margin-bottom: var(--space-2);
+}
+.admin-page__subtitle {
+  font-size: 0.95rem;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.admin-created-result {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: rgba(111, 206, 150, 0.1);
+  border: 1px solid rgba(111, 206, 150, 0.35);
+}
+.admin-created-result__title {
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: var(--space-1);
+}
+.admin-created-result__details {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.admin-created-result__details > div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.admin-created-result__details dt {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  min-width: 50px;
+}
+.admin-created-result__details dd {
+  font-family: monospace;
+  font-size: 0.95rem;
+  color: var(--text-1);
+  background: var(--bg-4);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.profile-photo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+.profile-photo-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.profile-photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-4);
+  border: 2px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-photo span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--blue-2);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-4);
+}
+.admin-table th {
+  text-align: left;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-strong);
+}
+.admin-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+/* Empilhados (não lado a lado) — a coluna "Ações" só precisa caber a
+   largura de UM botão, não dois, o que evita que a tabela (5 colunas)
+   fique mais larga que o cartão nas larguras comuns de tela. */
+.admin-table__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.admin-table__actions .btn { width: 100%; }
+/* Rede de segurança pra telas realmente estreitas ou nomes/e-mails
+   longos: em vez de vazar pra fora do cartão (que tem overflow: visible)
+   e ficar cortado pela borda, a tabela ganha scroll horizontal próprio. */
+.admin-table { display: block; overflow-x: auto; }
+.admin-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+.admin-table tbody tr:hover {
+  background: rgba(40, 128, 185, 0.06);
+}
+
+/* ===== Utility ===== */
+[hidden] { display: none !important; }

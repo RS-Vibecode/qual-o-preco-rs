@@ -1,0 +1,15 @@
+# Headers de segurança para hospedagem estática compatível com o formato
+# Netlify _headers (também suportado por alguns outros provedores).
+# Necessário porque X-Frame-Options, Permissions-Policy e
+# Strict-Transport-Security só têm efeito quando entregues como header
+# HTTP de verdade — uma tag <meta> no HTML não é suficiente para eles.
+# O Content-Security-Policy também é reforçado aqui com frame-ancestors,
+# que o navegador ignora quando declarado via <meta>.
+
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://yywveafqgmzbqqtdbuzz.supabase.co data:; connect-src 'self'; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload

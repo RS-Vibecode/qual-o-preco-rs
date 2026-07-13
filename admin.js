@@ -1,0 +1,511 @@
+"use strict";
+
+const createForm = document.getElementById("create-user-form");
+const createSubmitBtn = document.getElementById("create-user-submit");
+const createSubmitDefaultText = createSubmitBtn.textContent;
+const createdResult = document.getElementById("createdResult");
+const createdEmailEl = document.getElementById("createdEmail");
+const createdPasswordEl = document.getElementById("createdPassword");
+const copyPasswordBtn = document.getElementById("copyPasswordBtn");
+const usersTable = document.getElementById("usersTable");
+const usersTableBody = document.getElementById("usersTableBody");
+const usersEmpty = document.getElementById("usersEmpty");
+const resetResult = document.getElementById("resetResult");
+const resetEmailEl = document.getElementById("resetEmail");
+const resetPasswordEl = document.getElementById("resetPassword");
+const copyResetPasswordBtn = document.getElementById("copyResetPasswordBtn");
+const usersActionError = document.getElementById("usersActionError");
+
+// /api/auth/me não devolve o id (só dados de perfil) — usamos o e-mail
+// pra reconhecer "esta é a minha própria linha" e esconder o botão de
+// remover (a proteção de verdade é no servidor, isso é só UX). loadUsers()
+// só roda depois dessa promise resolver (ver final do arquivo) — sem
+// esperar, a primeira renderização da tabela sempre achava
+// currentUserEmail === null e mostrava "Remover" na própria linha do admin.
+let currentUserEmail = null;
+const currentUserReady = fetch("/api/auth/me", { credentials: "same-origin" })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((session) => {
+    if (session) currentUserEmail = session.email || null;
+  })
+  .catch(() => {});
+
+function setFieldError(id, message) {
+  const input = document.getElementById(id);
+  const error = document.getElementById(`${id}-error`);
+  input.closest(".field").classList.add("has-error");
+  input.setAttribute("aria-invalid", "true");
+  error.textContent = message;
+  error.hidden = false;
+}
+
+function clearFieldError(id) {
+  const input = document.getElementById(id);
+  const error = document.getElementById(`${id}-error`);
+  input.closest(".field").classList.remove("has-error");
+  input.removeAttribute("aria-invalid");
+  error.textContent = "";
+  error.hidden = true;
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function clearActionMessages() {
+  usersActionError.hidden = true;
+  usersActionError.textContent = "";
+  resetResult.hidden = true;
+}
+
+async function loadUsers() {
+  const resp = await fetch("/api/admin/users", { credentials: "same-origin" });
+  if (!resp.ok) return;
+  const { users } = await resp.json();
+
+  usersTableBody.replaceChildren();
+
+  if (!users.length) {
+    usersTable.hidden = true;
+    usersEmpty.hidden = false;
+    return;
+  }
+
+  usersTable.hidden = false;
+  usersEmpty.hidden = true;
+
+  const fragment = document.createDocumentFragment();
+  users.forEach((u) => {
+    const tr = document.createElement("tr");
+    tr.dataset.userId = u.id;
+    tr.dataset.userEmail = u.email;
+    tr.dataset.userName = u.fullName || u.email;
+
+    const nameTd = document.createElement("td");
+    nameTd.textContent = u.fullName || "—";
+
+    const emailTd = document.createElement("td");
+    emailTd.textContent = u.email;
+
+    const roleTd = document.createElement("td");
+    roleTd.textContent = u.role === "admin" ? "Administrador" : "Cliente";
+
+    const dateTd = document.createElement("td");
+    dateTd.textContent = formatDate(u.createdAt);
+
+    // O flex fica num <div> dentro do <td>, não no <td> em si — um <td>
+    // com display:flex direto confunde o algoritmo de largura de colunas
+    // da tabela em alguns navegadores (a coluna fica mais estreita do
+    // que o conteúdo dos botões precisa, cortando o texto no meio).
+    const actionsTd = document.createElement("td");
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "admin-table__actions";
+    actionsTd.appendChild(actionsWrap);
+
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "btn btn--secondary btn--sm";
+    resetBtn.dataset.action = "reset-password";
+    resetBtn.textContent = "Redefinir senha";
+    actionsWrap.appendChild(resetBtn);
+
+    if (u.email !== currentUserEmail) {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "btn btn--secondary btn--sm btn--danger";
+      deleteBtn.dataset.action = "delete";
+      deleteBtn.textContent = "Remover";
+      actionsWrap.appendChild(deleteBtn);
+    }
+
+    tr.append(nameTd, emailTd, roleTd, dateTd, actionsTd);
+    fragment.appendChild(tr);
+  });
+  usersTableBody.appendChild(fragment);
+}
+
+usersTableBody.addEventListener("click", async (event) => {
+  const btn = event.target.closest("button[data-action]");
+  if (!btn) return;
+
+  const tr = btn.closest("tr");
+  const id = tr.dataset.userId;
+  const email = tr.dataset.userEmail;
+  const name = tr.dataset.userName;
+  clearActionMessages();
+
+  if (btn.dataset.action === "delete") {
+    if (!window.confirm(`Remover ${name} (${email})? Essa ação não pode ser desfeita — a pessoa perde o acesso imediatamente.`)) {
+      return;
+    }
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Removendo...";
+    try {
+      const resp = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ id }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        usersActionError.textContent = data.error || "Não foi possível remover o usuário.";
+        usersActionError.hidden = false;
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return;
+      }
+      loadUsers();
+    } catch {
+      usersActionError.textContent = "Erro de conexão. Tente novamente.";
+      usersActionError.hidden = false;
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    return;
+  }
+
+  if (btn.dataset.action === "reset-password") {
+    if (!window.confirm(`Gerar uma nova senha para ${name} (${email})? A senha atual deixa de funcionar.`)) {
+      return;
+    }
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Redefinindo...";
+    try {
+      const resp = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ id }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        usersActionError.textContent = data.error || "Não foi possível redefinir a senha.";
+        usersActionError.hidden = false;
+        return;
+      }
+      resetEmailEl.textContent = email;
+      resetPasswordEl.textContent = data.password;
+      resetResult.hidden = false;
+      resetResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch {
+      usersActionError.textContent = "Erro de conexão. Tente novamente.";
+      usersActionError.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+});
+
+copyResetPasswordBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(resetPasswordEl.textContent);
+    const original = copyResetPasswordBtn.textContent;
+    copyResetPasswordBtn.textContent = "Copiado!";
+    setTimeout(() => {
+      copyResetPasswordBtn.textContent = original;
+    }, 1500);
+  } catch {
+    // clipboard indisponível — sem quebrar o fluxo
+  }
+});
+
+createForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearFieldError("fullName");
+  clearFieldError("newUserEmail");
+  createdResult.hidden = true;
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("newUserEmail").value.trim();
+  const role = document.getElementById("newUserRole").value;
+
+  let hasError = false;
+  if (!fullName) {
+    setFieldError("fullName", "Informe o nome completo.");
+    hasError = true;
+  }
+  if (!email) {
+    setFieldError("newUserEmail", "Informe o e-mail.");
+    hasError = true;
+  }
+  if (hasError) return;
+
+  createSubmitBtn.disabled = true;
+  createSubmitBtn.textContent = "Criando...";
+
+  try {
+    const resp = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ email, fullName, role }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      setFieldError("newUserEmail", data.error || "Não foi possível criar o cliente.");
+      return;
+    }
+
+    createdEmailEl.textContent = data.email;
+    createdPasswordEl.textContent = data.password;
+    createdResult.hidden = false;
+    createForm.reset();
+    loadUsers();
+  } catch {
+    setFieldError("newUserEmail", "Erro de conexão. Tente novamente.");
+  } finally {
+    createSubmitBtn.disabled = false;
+    createSubmitBtn.textContent = createSubmitDefaultText;
+  }
+});
+
+copyPasswordBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(createdPasswordEl.textContent);
+    const original = copyPasswordBtn.textContent;
+    copyPasswordBtn.textContent = "Copiado!";
+    setTimeout(() => {
+      copyPasswordBtn.textContent = original;
+    }, 1500);
+  } catch {
+    // clipboard indisponível — sem quebrar o fluxo
+  }
+});
+
+currentUserReady.then(loadUsers);
+
+/* ---------------------------------------------------------
+   Taxas de marketplace (Amazon, por enquanto) — tabela editável em vez de
+   hardcoded num arquivo de código, pra corrigir um valor sem depender de
+   deploy. Ver api/marketplace-rates.js / lib/marketplaceRates.js.
+   --------------------------------------------------------- */
+
+function parseLocaleNumber(input) {
+  if (input == null) return NaN;
+  let s = String(input).trim();
+  if (s === "") return NaN;
+  s = s.replace(/[^0-9,.\-]/g, "");
+  if (s === "" || s === "-") return NaN;
+  const hasComma = s.includes(",");
+  const hasDot = s.includes(".");
+  if (hasComma && hasDot) {
+    if (s.lastIndexOf(",") > s.lastIndexOf(".")) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma) {
+    s = s.replace(",", ".");
+  }
+  if ((s.match(/\./g) || []).length > 1) return NaN;
+  return Number(s);
+}
+
+function formatPct(value) {
+  const n = Number(value);
+  const rounded = Math.round(n * 100) / 100;
+  return `${rounded.toString().replace(".", ",")}%`;
+}
+
+function formatBRLSimple(value) {
+  return `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+}
+
+const rateForm = document.getElementById("rate-form");
+const rateSubmitBtn = document.getElementById("rate-submit");
+const rateCancelEditBtn = document.getElementById("rate-cancel-edit");
+const rateActionError = document.getElementById("rateActionError");
+const ratesTable = document.getElementById("ratesTable");
+const ratesTableBody = document.getElementById("ratesTableBody");
+const ratesEmpty = document.getElementById("ratesEmpty");
+
+const rateFieldIds = ["rateCategory", "ratePct", "rateMinFee", "rateTierThreshold", "ratePctAbove", "rateFixedFee", "rateNote"];
+
+function clearRateForm() {
+  document.getElementById("rateId").value = "";
+  rateFieldIds.forEach((id) => {
+    document.getElementById(id).value = "";
+  });
+  clearFieldError("rateCategory");
+  clearFieldError("ratePct");
+  rateSubmitBtn.textContent = "Adicionar categoria";
+  rateCancelEditBtn.hidden = true;
+}
+
+function fillRateForm(rate) {
+  document.getElementById("rateId").value = rate.id;
+  document.getElementById("rateCategory").value = rate.category_label;
+  document.getElementById("ratePct").value = String(rate.pct).replace(".", ",");
+  document.getElementById("rateMinFee").value = rate.min_fee ? String(rate.min_fee).replace(".", ",") : "";
+  document.getElementById("rateTierThreshold").value = rate.tier_threshold != null ? String(rate.tier_threshold).replace(".", ",") : "";
+  document.getElementById("ratePctAbove").value = rate.pct_above_threshold != null ? String(rate.pct_above_threshold).replace(".", ",") : "";
+  document.getElementById("rateFixedFee").value = rate.fixed_fee ? String(rate.fixed_fee).replace(".", ",") : "";
+  document.getElementById("rateNote").value = rate.note || "";
+  rateSubmitBtn.textContent = "Salvar alterações";
+  rateCancelEditBtn.hidden = false;
+  rateForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  document.getElementById("rateCategory").focus();
+}
+
+function describeRateDetails(rate) {
+  const parts = [];
+  if (rate.tier_threshold != null && rate.pct_above_threshold != null) {
+    parts.push(`${formatPct(rate.pct_above_threshold)} acima de ${formatBRLSimple(rate.tier_threshold)}`);
+  }
+  if (rate.fixed_fee) {
+    parts.push(`+ ${formatBRLSimple(rate.fixed_fee)} fixo`);
+  }
+  if (rate.min_fee) {
+    parts.push(`mín. ${formatBRLSimple(rate.min_fee)}`);
+  }
+  return parts.length ? parts.join(" · ") : "—";
+}
+
+async function loadRates() {
+  const resp = await fetch("/api/marketplace-rates?marketplace=amazon", { credentials: "same-origin" });
+  if (!resp.ok) return;
+  const { rates } = await resp.json();
+
+  ratesTableBody.replaceChildren();
+
+  if (!rates.length) {
+    ratesTable.hidden = true;
+    ratesEmpty.hidden = false;
+    return;
+  }
+
+  ratesTable.hidden = false;
+  ratesEmpty.hidden = true;
+
+  const fragment = document.createDocumentFragment();
+  rates.forEach((rate) => {
+    const tr = document.createElement("tr");
+
+    const catTd = document.createElement("td");
+    catTd.textContent = rate.category_label;
+    if (rate.note) catTd.title = rate.note;
+
+    const pctTd = document.createElement("td");
+    pctTd.textContent = formatPct(rate.pct);
+
+    const detailsTd = document.createElement("td");
+    detailsTd.textContent = describeRateDetails(rate);
+
+    const actionsTd = document.createElement("td");
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "admin-table__actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "btn btn--secondary btn--sm";
+    editBtn.textContent = "Editar";
+    editBtn.addEventListener("click", () => fillRateForm(rate));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "btn btn--secondary btn--sm btn--danger";
+    deleteBtn.textContent = "Remover";
+    deleteBtn.addEventListener("click", async () => {
+      if (!window.confirm(`Remover a categoria "${rate.category_label}"?`)) return;
+      deleteBtn.disabled = true;
+      try {
+        const delResp = await fetch("/api/marketplace-rates", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ id: rate.id }),
+        });
+        if (!delResp.ok) {
+          const data = await delResp.json();
+          rateActionError.textContent = data.error || "Não foi possível remover a categoria.";
+          rateActionError.hidden = false;
+          deleteBtn.disabled = false;
+          return;
+        }
+        loadRates();
+      } catch {
+        rateActionError.textContent = "Erro de conexão. Tente novamente.";
+        rateActionError.hidden = false;
+        deleteBtn.disabled = false;
+      }
+    });
+
+    actionsWrap.append(editBtn, deleteBtn);
+    actionsTd.appendChild(actionsWrap);
+    tr.append(catTd, pctTd, detailsTd, actionsTd);
+    fragment.appendChild(tr);
+  });
+  ratesTableBody.appendChild(fragment);
+}
+
+rateForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearFieldError("rateCategory");
+  clearFieldError("ratePct");
+  rateActionError.hidden = true;
+
+  const id = document.getElementById("rateId").value.trim();
+  const category = document.getElementById("rateCategory").value.trim();
+  const pctRaw = document.getElementById("ratePct").value.trim();
+
+  let hasError = false;
+  if (!category) {
+    setFieldError("rateCategory", "Informe a categoria.");
+    hasError = true;
+  }
+  const pct = parseLocaleNumber(pctRaw);
+  if (!Number.isFinite(pct) || pct < 0) {
+    setFieldError("ratePct", "Informe a comissão em %.");
+    hasError = true;
+  }
+  if (hasError) return;
+
+  const minFeeRaw = document.getElementById("rateMinFee").value.trim();
+  const tierRaw = document.getElementById("rateTierThreshold").value.trim();
+  const pctAboveRaw = document.getElementById("ratePctAbove").value.trim();
+  const fixedFeeRaw = document.getElementById("rateFixedFee").value.trim();
+  const note = document.getElementById("rateNote").value.trim();
+
+  const payload = {
+    marketplace: "amazon",
+    category_label: category,
+    pct,
+    min_fee: minFeeRaw ? parseLocaleNumber(minFeeRaw) : 0,
+    tier_threshold: tierRaw ? parseLocaleNumber(tierRaw) : null,
+    pct_above_threshold: pctAboveRaw ? parseLocaleNumber(pctAboveRaw) : null,
+    fixed_fee: fixedFeeRaw ? parseLocaleNumber(fixedFeeRaw) : 0,
+    note: note || null,
+  };
+
+  rateSubmitBtn.disabled = true;
+  try {
+    const resp = await fetch("/api/marketplace-rates", {
+      method: id ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(id ? { id, ...payload } : payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      rateActionError.textContent = data.error || "Não foi possível salvar a categoria.";
+      rateActionError.hidden = false;
+      return;
+    }
+    clearRateForm();
+    loadRates();
+  } catch {
+    rateActionError.textContent = "Erro de conexão. Tente novamente.";
+    rateActionError.hidden = false;
+  } finally {
+    rateSubmitBtn.disabled = false;
+  }
+});
+
+rateCancelEditBtn.addEventListener("click", () => clearRateForm());
+
+loadRates();
