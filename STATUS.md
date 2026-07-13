@@ -386,22 +386,59 @@ diferentes, não uma cópia do fluxo da Amazon:
 - Testado localmente (painel admin trocando entre Amazon/Shopee, e dois cenários de cálculo
   com valores conferidos à mão) antes de publicar em produção.
 
+### 15. TikTok Shop como 4º marketplace — mesmo formato de faixa da Shopee (13/07/2026)
+
+Mesmo formato da Shopee (comissão por faixa de preço, sem categoria), então reaproveitou
+quase tudo — a única mudança de fundo foi generalizar o nome do tipo de taxa no motor de
+cálculo, que antes se chamava `"shopee-banded"` (específico demais) e virou `"price-banded"`,
+com a regra opcional do "abaixo de X reais" (usada só pela Shopee) marcada por um campo
+próprio (`entry.halveFeeBelow`) em vez de estar hardcoded no nome do marketplace.
+
+- **Fonte dos dados**: comunicado oficial do TikTok Shop para o vendedor, conferido em
+  13/07/2026. Tabela por faixa de preço: até R$49,99 → 10% + R$4,00; a partir de R$50,00 →
+  6% + R$6,00.
+- **Detalhe temporal importante**: essa tarifa só passa a valer a partir de 15/07/2026
+  00:00 (2 dias depois da conferência) — antes disso era uma taxa fixa (6% + R$4,00 pra
+  qualquer preço, sem faixa). Decisão confirmada com você: cadastrar já a tabela nova, já
+  que a antiga fica obsoleta em 2 dias e a ferramenta serve pra precificar vendas futuras.
+- **Validação rigorosa**: o comunicado trazia dois exemplos numéricos prontos (camisa
+  R$45,00 → taxa total R$8,50; calça com preço líquido R$75,00 → taxa total R$10,50).
+  Reproduzi os dois exatos no simulador (ajustando custo/markup pra chegar nesses preços
+  finais) e bateram certinho, confirmando que o motor de cálculo replica a fórmula oficial
+  corretamente antes de publicar.
+- **Sem informação de**: taxa de processamento de pagamento separada, nem distinção
+  CPF/CNPJ — o material recebido não mencionou nenhuma das duas; nota registrada em cada
+  linha cadastrada avisando dessa limitação.
+- **Painel admin**: seletor de marketplace ganhou a opção "TikTok Shop", reaproveitando o
+  mesmo layout de formulário da Shopee (faixa de preço, sem os campos de categoria da
+  Amazon).
+- **Calculadora**: checkbox "Incluir o TikTok Shop", mesmo padrão do checkbox da Shopee
+  (sem seletor de categoria, pelo mesmo motivo).
+- **Visual**: cartão branco com borda preta, preço em magenta (#FE2C55) e um traço
+  duotone ciano/magenta (#25F4EE / #FE2C55) sob o nome — as cores reais da marca, mesmo
+  padrão de autenticidade usado nos cartões da Amazon e da Shopee.
+- Publicado em produção e testado lá também (reproduzindo o exemplo da camisa, bateu
+  R$45,00 → R$8,50 de taxa total).
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança, primeiro deploy em
-produção e agora Amazon + Shopee como marketplaces de referência — tudo testado e
-funcionando. Falta:
+produção e agora Amazon + Shopee + TikTok Shop como marketplaces de referência — tudo
+testado e funcionando. Falta:
 
-1. **Adicionar TikTok Shop, Magalu e Shein** — mesmo processo da Amazon/Shopee: você manda
-   print da tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e
-   cadastro em `marketplace_rates` (a estrutura já suporta os formatos encontrados até
-   agora: por categoria, por faixa de preço, com/sem tarifa fixa).
-2. Atualizar o `README.md`: seção do Mercado Livre (modelo por usuário em vez de conexão
+1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
+   tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
+   `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
+   categoria, por faixa de preço, com/sem tarifa fixa).
+2. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+   verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
+   com o painel oficial deles antes dessa data.
+3. Atualizar o `README.md`: seção do Mercado Livre (modelo por usuário em vez de conexão
    única — e a observação de que testar conexão exige produção, não localhost), resumo da
    revisão de segurança, a seção de tipografia/paleta (referenciar o Manual de Marca RS em
    vez do sistema antigo "inspirado no RS Academy"), e a nova seção de taxas de marketplace
-   editáveis pelo admin (Amazon + Shopee).
-3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+   editáveis pelo admin (Amazon + Shopee + TikTok Shop).
+4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-4. A conta de teste do André Simões (`zanfaust@gmail.com`) ficou criada e conectada — decidir
+5. A conta de teste do André Simões (`zanfaust@gmail.com`) ficou criada e conectada — decidir
    se mantém como conta de teste permanente ou remove depois de validado.

@@ -1024,6 +1024,45 @@ body.auth-pending main {
   background: #EE4D2D;
 }
 
+/* Cores oficiais do TikTok: preto quase puro + o duotone ciano/magenta do
+   glitch da marca — usado com moderação (traço embaixo do nome, detalhe
+   no selo) pra ficar reconhecível sem brigar com o resto do cartão. */
+.brand--tiktok {
+  background: #FFFFFF;
+  color: #010101;
+  border: 2px solid #010101;
+  --brand-glow: rgba(254, 44, 85, 0.3);
+}
+.brand--tiktok .compare-card__price {
+  color: #FE2C55;
+}
+.brand--tiktok .compare-card__rank {
+  background: #010101;
+  color: #25F4EE;
+}
+.brand--tiktok .compare-card__badge,
+.brand--tiktok .compare-card__real-badge {
+  background: #010101;
+  color: #25F4EE;
+}
+.brand--tiktok .compare-card__badge::before {
+  color: #25F4EE;
+}
+.brand--tiktok .compare-card__name {
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+.brand--tiktok .compare-card__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #25F4EE 50%, #FE2C55 50%);
+}
+
 .field__reference {
   font-size: 0.83rem;
   color: var(--blue-2);

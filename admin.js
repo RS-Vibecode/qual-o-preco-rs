@@ -349,6 +349,13 @@ const MARKETPLACE_COPY = {
     showMinFee: false,
     fixedFeeHelp: "Tarifa fixa da própria faixa (ex.: R$16 na faixa de R$80 a R$99,99) — não é opcional pra Shopee.",
   },
+  tiktok: {
+    categoryLabel: "Faixa de preço (descrição)",
+    tierLabel: 'A partir de que preço essa faixa vale <span class="field__optional">(0 = faixa inicial)</span>',
+    showPctAbove: false,
+    showMinFee: false,
+    fixedFeeHelp: 'Tarifa fixa da própria faixa (chamada de "taxa por item vendido" pelo TikTok Shop) — não é opcional.',
+  },
 };
 
 function updateRateFormCopy() {

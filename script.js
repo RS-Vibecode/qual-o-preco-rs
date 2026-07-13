@@ -298,12 +298,17 @@ function buildBreakdownBar(r) {
  *   efetivo passa a ser exatamente o necessário pra bater o mínimo.
  *   Tarifa fixa adicional (entry.fixedFee, ex.: R$2 de "Mídia" na Amazon)
  *   sempre soma, independente da faixa.
- * - "shopee-banded": % e tarifa fixa vêm de uma tabela de faixas de preço
- *   (entry.bands, ordenada por threshold crescente — ex.: até R$79,99:
- *   20%+R$4; de R$80 a R$99,99: 14%+R$16; ...) — diferente da Amazon, aqui
- *   a FAIXA INTEIRA muda (não é um blend acima de um único limiar). Regra
- *   adicional da própria Shopee: abaixo de R$8, a tarifa fixa da faixa
- *   inicial vira metade do preço do produto (não o valor fixo da tabela).
+ * - "price-banded": % e tarifa fixa vêm de uma tabela de faixas de preço
+ *   (entry.bands, ordenada por threshold crescente — ex. Shopee: até
+ *   R$79,99: 20%+R$4; de R$80 a R$99,99: 14%+R$16; ...; TikTok Shop: até
+ *   R$49,99: 10%+R$4; a partir de R$50: 6%+R$6) — diferente da Amazon,
+ *   aqui a FAIXA INTEIRA muda (não é um blend acima de um único limiar).
+ *   Usado por qualquer marketplace com esse formato (Shopee, TikTok Shop,
+ *   e o que mais vier depois com a mesma estrutura — ver buildShopeeEntry
+ *   e buildTikTokEntry). Regra adicional específica da Shopee, marcada em
+ *   entry.halveFeeBelow: abaixo de R$8, a tarifa fixa da faixa inicial
+ *   vira metade do preço do produto (não o valor fixo da tabela) — outros
+ *   marketplaces que usem este kind simplesmente não setam essa opção.
  * - default ("ml-reference"): taxa fixa de referência por faixa de preço
  *   do próprio Mercado Livre (ver estimateReferenceFixedFee).
  */
@@ -328,7 +333,7 @@ function resolveFeesForEntry(entry, price) {
     return { pct, fixedFee: entry.fixedFee || 0 };
   }
 
-  if (entry.kind === "shopee-banded") {
+  if (entry.kind === "price-banded") {
     const p = Number.isFinite(price) && price > 0 ? price : 0;
     let band = entry.bands[0];
     for (const b of entry.bands) {
@@ -336,7 +341,7 @@ function resolveFeesForEntry(entry, price) {
       else break;
     }
     let fixedFee = band.fixedFee;
-    if (band.threshold === 0 && p > 0 && p < 8) {
+    if (band.threshold === 0 && entry.halveFeeBelow && p > 0 && p < entry.halveFeeBelow) {
       fixedFee = Math.round((p / 2) * 100) / 100;
     }
     return { pct: band.pct, fixedFee };
@@ -703,7 +708,7 @@ loadShopeeRates();
 /** Constrói UMA entrada de cartão a partir de TODAS as linhas de
  * marketplace_rates da Shopee (cada linha é uma faixa de preço, não uma
  * categoria escolhida pelo usuário — ver resolveFeesForEntry, kind
- * "shopee-banded"). */
+ * "price-banded"). */
 function buildShopeeEntry(rates) {
   const bands = rates
     .map((r) => ({
@@ -718,9 +723,56 @@ function buildShopeeEntry(rates) {
     id: "shopee",
     label: "Shopee",
     theme: "shopee",
-    kind: "shopee-banded",
+    kind: "price-banded",
     bands,
+    halveFeeBelow: 8,
     captionNote: "Tabela padrão (CNPJ, ou CPF com até 450 pedidos/90 dias) · taxa de referência, não é consulta em tempo real.",
+  };
+}
+
+/* ---------------------------------------------------------
+   TikTok Shop (opcional) — mesmo formato da Shopee (faixa de preço, sem
+   categoria), mas sem a regra do <R$8 (entry.halveFeeBelow fica de fora).
+   Tarifa vigente a partir de 15/07/2026 (ver nota cadastrada em cada
+   linha) — a anterior a essa data era fixa (6% + R$4) para qualquer
+   preço, sem faixas.
+   --------------------------------------------------------- */
+
+const tiktokIncludeCheckbox = document.getElementById("tiktokInclude");
+let tiktokRates = [];
+
+async function loadTikTokRates() {
+  if (!tiktokIncludeCheckbox) return;
+  try {
+    const resp = await fetch("/api/marketplace-rates?marketplace=tiktok", { credentials: "same-origin" });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    tiktokRates = Array.isArray(data.rates) ? data.rates : [];
+  } catch {
+    // sem faixas cadastradas ainda, ou falha de rede — o TikTok Shop
+    // simplesmente não aparece na comparação, o resto funciona normal
+  }
+}
+
+loadTikTokRates();
+
+function buildTikTokEntry(rates) {
+  const bands = rates
+    .map((r) => ({
+      threshold: r.tier_threshold != null ? Number(r.tier_threshold) : 0,
+      pct: Number(r.pct),
+      fixedFee: Number(r.fixed_fee) || 0,
+    }))
+    .sort((a, b) => a.threshold - b.threshold);
+  if (!bands.length) return null;
+
+  return {
+    id: "tiktok",
+    label: "TikTok Shop",
+    theme: "tiktok",
+    kind: "price-banded",
+    bands,
+    captionNote: "Tarifa vigente a partir de 15/07/2026 · taxa de referência, não é consulta em tempo real.",
   };
 }
 
@@ -951,6 +1003,11 @@ form.addEventListener("submit", async (event) => {
   if (shopeeIncludeCheckbox?.checked) {
     const shopeeEntry = buildShopeeEntry(shopeeRates);
     if (shopeeEntry) feesToUse = [...feesToUse, shopeeEntry];
+  }
+
+  if (tiktokIncludeCheckbox?.checked) {
+    const tiktokEntry = buildTikTokEntry(tiktokRates);
+    if (tiktokEntry) feesToUse = [...feesToUse, tiktokEntry];
   }
 
   renderAllMarketplaces(values, feesToUse, shippingCost);
