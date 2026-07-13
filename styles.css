@@ -1525,11 +1525,16 @@ dialog.card-modal::backdrop {
   backdrop-filter: blur(3px);
 }
 .card-modal__inner {
+  /* Só posiciona e anima — NÃO tem overflow aqui de propósito. Se tivesse
+     (como era antes), o botão de fechar (que fica de propósito meio pra
+     fora do cartão, ver .card-modal__close) seria cortado: definir
+     overflow só num eixo (overflow-y) faz o CSS tratar o outro eixo como
+     "auto" também (regra da spec de overflow), então o botão ficava
+     visualmente cortado E ainda contava como conteúdo pra abrir uma
+     barra de rolagem horizontal indesejada. A rolagem de verdade mora só
+     em .card-modal__content, que não tem nada posicionado pra fora dela. */
   position: relative;
   width: min(92vw, 480px);
-  max-height: min(88vh, 720px);
-  overflow-y: auto;
-  border-radius: var(--radius-lg);
   animation: modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes modal-in {
@@ -1538,6 +1543,11 @@ dialog.card-modal::backdrop {
 }
 @media (prefers-reduced-motion: reduce) {
   .card-modal__inner { animation: none; }
+}
+.card-modal__content {
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
 }
 .card-modal__content .compare-card {
   /* .compare-card começa com opacity:0/translateY(16px) e só fica visível
@@ -1551,24 +1561,26 @@ dialog.card-modal::backdrop {
 }
 .card-modal__close {
   position: absolute;
-  top: -14px;
-  right: -14px;
+  top: -16px;
+  right: -16px;
   z-index: 2;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
-  background: var(--bg-3);
-  color: var(--text-1);
+  border: none;
+  background: var(--text-1);
+  color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 3px var(--bg-2);
   transition: transform var(--transition-fast), background-color var(--transition-fast);
 }
 .card-modal__close:hover {
-  transform: scale(1.08);
-  background: var(--bg-4);
+  transform: scale(1.08) rotate(90deg);
+  background: var(--blue-2);
+  color: var(--white);
 }
 .card-modal__close:focus-visible {
   outline: 3px solid var(--blue);
