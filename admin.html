@@ -150,15 +150,24 @@
     </section>
 
     <section class="card admin-page__wide-card reveal" aria-labelledby="rates-title">
-      <h2 id="rates-title" class="card__title">Taxas de marketplace — Amazon</h2>
-      <p class="admin-page__subtitle">Editável por você — a calculadora usa esses valores como referência (não é uma taxa em tempo real, como a do Mercado Livre). Fonte: painel oficial do vendedor Amazon, conferido em 13/07/2026.</p>
+      <h2 id="rates-title" class="card__title">Taxas de marketplace</h2>
+      <p class="admin-page__subtitle">Editável por você — a calculadora usa esses valores como referência (não é uma taxa em tempo real, como a do Mercado Livre). Amazon: painel oficial do vendedor, conferido em 13/07/2026. Shopee: central de ajuda do vendedor, conferida em 13/07/2026.</p>
 
       <form id="rate-form" novalidate>
         <input type="hidden" id="rateId" value="" />
-        <input type="hidden" id="rateMarketplace" value="amazon" />
 
         <div class="field">
-          <label for="rateCategory">Categoria</label>
+          <label for="rateMarketplace">Marketplace</label>
+          <div class="input-wrap">
+            <select id="rateMarketplace">
+              <option value="amazon">Amazon</option>
+              <option value="shopee">Shopee</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="rateCategory" id="rateCategory-label">Categoria</label>
           <div class="input-wrap">
             <input type="text" id="rateCategory" autocomplete="off" aria-describedby="rateCategory-error" />
           </div>
@@ -174,7 +183,7 @@
             </div>
             <p class="field__error" id="ratePct-error" role="alert" hidden></p>
           </div>
-          <div class="field">
+          <div class="field" id="rateMinFee-field">
             <label for="rateMinFee">Comissão mínima <span class="field__optional">(opcional)</span></label>
             <div class="input-wrap">
               <div class="input-affix input-affix--prefix">R$</div>
@@ -185,13 +194,13 @@
 
         <div class="field-row">
           <div class="field">
-            <label for="rateTierThreshold">Muda de % acima de <span class="field__optional">(opcional)</span></label>
+            <label for="rateTierThreshold" id="rateTierThreshold-label">Muda de % acima de <span class="field__optional">(opcional)</span></label>
             <div class="input-wrap">
               <div class="input-affix input-affix--prefix">R$</div>
               <input type="text" inputmode="decimal" id="rateTierThreshold" placeholder="Ex: 100" />
             </div>
           </div>
-          <div class="field">
+          <div class="field" id="ratePctAbove-field">
             <label for="ratePctAbove">% acima desse valor <span class="field__optional">(opcional)</span></label>
             <div class="input-wrap">
               <input type="text" inputmode="decimal" id="ratePctAbove" placeholder="Ex: 10" />
@@ -206,7 +215,7 @@
             <div class="input-affix input-affix--prefix">R$</div>
             <input type="text" inputmode="decimal" id="rateFixedFee" placeholder="Ex: 2,00" />
           </div>
-          <p class="field__help">Some à comissão — use pra tarifas como a de "Mídia" (R$2,00 fixo, plano Individual).</p>
+          <p class="field__help" id="rateFixedFee-help">Some à comissão — use pra tarifas como a de "Mídia" (R$2,00 fixo, plano Individual) na Amazon.</p>
         </div>
 
         <div class="field">
@@ -217,7 +226,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn--primary" id="rate-submit">Adicionar categoria</button>
+          <button type="submit" class="btn btn--primary" id="rate-submit">Adicionar</button>
           <button type="button" class="btn btn--secondary" id="rate-cancel-edit" hidden>Cancelar edição</button>
         </div>
       </form>

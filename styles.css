@@ -921,6 +921,23 @@ body.auth-pending main {
   font-size: 0.85em;
 }
 
+.field--checkbox__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-1);
+  cursor: pointer;
+}
+.field--checkbox__label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
 /* Cor oficial da marca, usada nos cartões de comparação apenas para
    identificação visual — nenhuma afiliação com o Mercado Livre é
    implicada. --brand-glow alimenta a sombra colorida do .compare-card. */
@@ -966,6 +983,45 @@ body.auth-pending main {
   height: 3px;
   border-radius: 2px;
   background: #FF9900;
+}
+
+/* Cor oficial da Shopee (laranja da marca), no mesmo padrão "fundo branco
+   + acento colorido" usado na Amazon acima — legível e reconhecível sem
+   precisar reescrever as cores de texto padrão dos cartões. */
+.brand--shopee {
+  background: #FFFFFF;
+  color: #1B1B1B;
+  border: 2px solid #EE4D2D;
+  --brand-glow: rgba(238, 77, 45, 0.3);
+}
+.brand--shopee .compare-card__price {
+  color: #EE4D2D;
+}
+.brand--shopee .compare-card__rank {
+  background: #EE4D2D;
+  color: #FFFFFF;
+}
+.brand--shopee .compare-card__badge,
+.brand--shopee .compare-card__real-badge {
+  background: #EE4D2D;
+  color: #FFFFFF;
+}
+.brand--shopee .compare-card__badge::before {
+  color: #FFFFFF;
+}
+.brand--shopee .compare-card__name {
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+.brand--shopee .compare-card__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 2px;
+  background: #EE4D2D;
 }
 
 .field__reference {

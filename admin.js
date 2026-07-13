@@ -317,6 +317,7 @@ function formatBRLSimple(value) {
 }
 
 const rateForm = document.getElementById("rate-form");
+const rateMarketplaceSelect = document.getElementById("rateMarketplace");
 const rateSubmitBtn = document.getElementById("rate-submit");
 const rateCancelEditBtn = document.getElementById("rate-cancel-edit");
 const rateActionError = document.getElementById("rateActionError");
@@ -326,6 +327,39 @@ const ratesEmpty = document.getElementById("ratesEmpty");
 
 const rateFieldIds = ["rateCategory", "ratePct", "rateMinFee", "rateTierThreshold", "ratePctAbove", "rateFixedFee", "rateNote"];
 
+// A Amazon varia comissão por CATEGORIA de produto (às vezes com um
+// segundo % acima de um limiar, dentro da mesma categoria); a Shopee varia
+// comissão por FAIXA DE PREÇO do item (sem categoria) — cada linha
+// cadastrada aqui já É uma faixa inteira, então os campos "muda de % acima
+// de" / "% acima desse valor" (feitos pro caso da Amazon) não fazem
+// sentido pra Shopee, e ficam escondidos. Ver resolveFeesForEntry em
+// script.js (kind "amazon-tiered" vs. "shopee-banded").
+const MARKETPLACE_COPY = {
+  amazon: {
+    categoryLabel: "Categoria",
+    tierLabel: 'Muda de % acima de <span class="field__optional">(opcional)</span>',
+    showPctAbove: true,
+    showMinFee: true,
+    fixedFeeHelp: 'Some à comissão — use pra tarifas como a de "Mídia" (R$2,00 fixo, plano Individual) na Amazon.',
+  },
+  shopee: {
+    categoryLabel: "Faixa de preço (descrição)",
+    tierLabel: 'A partir de que preço essa faixa vale <span class="field__optional">(0 = faixa inicial)</span>',
+    showPctAbove: false,
+    showMinFee: false,
+    fixedFeeHelp: "Tarifa fixa da própria faixa (ex.: R$16 na faixa de R$80 a R$99,99) — não é opcional pra Shopee.",
+  },
+};
+
+function updateRateFormCopy() {
+  const copy = MARKETPLACE_COPY[rateMarketplaceSelect.value] || MARKETPLACE_COPY.amazon;
+  document.getElementById("rateCategory-label").textContent = copy.categoryLabel;
+  document.getElementById("rateTierThreshold-label").innerHTML = copy.tierLabel;
+  document.getElementById("ratePctAbove-field").hidden = !copy.showPctAbove;
+  document.getElementById("rateMinFee-field").hidden = !copy.showMinFee;
+  document.getElementById("rateFixedFee-help").textContent = copy.fixedFeeHelp;
+}
+
 function clearRateForm() {
   document.getElementById("rateId").value = "";
   rateFieldIds.forEach((id) => {
@@ -333,12 +367,14 @@ function clearRateForm() {
   });
   clearFieldError("rateCategory");
   clearFieldError("ratePct");
-  rateSubmitBtn.textContent = "Adicionar categoria";
+  rateSubmitBtn.textContent = "Adicionar";
   rateCancelEditBtn.hidden = true;
+  updateRateFormCopy();
 }
 
 function fillRateForm(rate) {
   document.getElementById("rateId").value = rate.id;
+  rateMarketplaceSelect.value = rate.marketplace;
   document.getElementById("rateCategory").value = rate.category_label;
   document.getElementById("ratePct").value = String(rate.pct).replace(".", ",");
   document.getElementById("rateMinFee").value = rate.min_fee ? String(rate.min_fee).replace(".", ",") : "";
@@ -346,6 +382,7 @@ function fillRateForm(rate) {
   document.getElementById("ratePctAbove").value = rate.pct_above_threshold != null ? String(rate.pct_above_threshold).replace(".", ",") : "";
   document.getElementById("rateFixedFee").value = rate.fixed_fee ? String(rate.fixed_fee).replace(".", ",") : "";
   document.getElementById("rateNote").value = rate.note || "";
+  updateRateFormCopy();
   rateSubmitBtn.textContent = "Salvar alterações";
   rateCancelEditBtn.hidden = false;
   rateForm.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -356,6 +393,8 @@ function describeRateDetails(rate) {
   const parts = [];
   if (rate.tier_threshold != null && rate.pct_above_threshold != null) {
     parts.push(`${formatPct(rate.pct_above_threshold)} acima de ${formatBRLSimple(rate.tier_threshold)}`);
+  } else if (rate.tier_threshold != null) {
+    parts.push(`a partir de ${formatBRLSimple(rate.tier_threshold)}`);
   }
   if (rate.fixed_fee) {
     parts.push(`+ ${formatBRLSimple(rate.fixed_fee)} fixo`);
@@ -367,7 +406,7 @@ function describeRateDetails(rate) {
 }
 
 async function loadRates() {
-  const resp = await fetch("/api/marketplace-rates?marketplace=amazon", { credentials: "same-origin" });
+  const resp = await fetch(`/api/marketplace-rates?marketplace=${encodeURIComponent(rateMarketplaceSelect.value)}`, { credentials: "same-origin" });
   if (!resp.ok) return;
   const { rates } = await resp.json();
 
@@ -472,7 +511,7 @@ rateForm.addEventListener("submit", async (event) => {
   const note = document.getElementById("rateNote").value.trim();
 
   const payload = {
-    marketplace: "amazon",
+    marketplace: rateMarketplaceSelect.value,
     category_label: category,
     pct,
     min_fee: minFeeRaw ? parseLocaleNumber(minFeeRaw) : 0,
@@ -508,4 +547,10 @@ rateForm.addEventListener("submit", async (event) => {
 
 rateCancelEditBtn.addEventListener("click", () => clearRateForm());
 
+rateMarketplaceSelect.addEventListener("change", () => {
+  clearRateForm();
+  loadRates();
+});
+
+updateRateFormCopy();
 loadRates();

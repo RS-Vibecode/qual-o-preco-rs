@@ -298,6 +298,12 @@ function buildBreakdownBar(r) {
  *   efetivo passa a ser exatamente o necessário pra bater o mínimo.
  *   Tarifa fixa adicional (entry.fixedFee, ex.: R$2 de "Mídia" na Amazon)
  *   sempre soma, independente da faixa.
+ * - "shopee-banded": % e tarifa fixa vêm de uma tabela de faixas de preço
+ *   (entry.bands, ordenada por threshold crescente — ex.: até R$79,99:
+ *   20%+R$4; de R$80 a R$99,99: 14%+R$16; ...) — diferente da Amazon, aqui
+ *   a FAIXA INTEIRA muda (não é um blend acima de um único limiar). Regra
+ *   adicional da própria Shopee: abaixo de R$8, a tarifa fixa da faixa
+ *   inicial vira metade do preço do produto (não o valor fixo da tabela).
  * - default ("ml-reference"): taxa fixa de referência por faixa de preço
  *   do próprio Mercado Livre (ver estimateReferenceFixedFee).
  */
@@ -320,6 +326,20 @@ function resolveFeesForEntry(entry, price) {
       }
     }
     return { pct, fixedFee: entry.fixedFee || 0 };
+  }
+
+  if (entry.kind === "shopee-banded") {
+    const p = Number.isFinite(price) && price > 0 ? price : 0;
+    let band = entry.bands[0];
+    for (const b of entry.bands) {
+      if (p >= b.threshold) band = b;
+      else break;
+    }
+    let fixedFee = band.fixedFee;
+    if (band.threshold === 0 && p > 0 && p < 8) {
+      fixedFee = Math.round((p / 2) * 100) / 100;
+    }
+    return { pct: band.pct, fixedFee };
   }
 
   // "ml-reference" (padrão): taxa fixa depende só da faixa de preço do ML.
@@ -345,33 +365,40 @@ function isDynamicEntry(entry) {
  * dois lados da regra se sustenta sozinho (assumir que a taxa se aplica
  * leva a um preço onde ela não se aplicaria mais, e vice-versa). Isso é
  * uma característica real da regra do ML pra itens muito baratos, não um
- * bug de cálculo. Quando isso acontece (detectado como oscilação entre
- * dois valores), a ferramenta fica com o MAIOR dos dois — mais
+ * bug de cálculo. Quando isso acontece, a sequência de preços fica
+ * alternando de direção a cada passo (sobe, desce, sobe...) — é isso que é
+ * detectado como oscilação de verdade (não apenas "o passo ficou
+ * pequeno", que também acontece em convergência normal só que mais lenta —
+ * ver nota na regra da Shopee abaixo de R$8, que converge suavemente e não
+ * pode disparar esse alarme por engano). Quando a oscilação de verdade é
+ * detectada, a ferramenta fica com o MAIOR preço dos dois — mais
  * conservador, protege a margem do vendedor em vez de arriscar
  * subprecificar.
  */
 function resolveEntryPricing(entry, values, shippingCost) {
-  const MAX_ITERATIONS = 12;
+  const MAX_ITERATIONS = 25;
   let { pct, fixedFee } = resolveFeesForEntry(entry, null);
   let r = calculatePricing({ ...values, marketplacePct: pct, fixedFee, shippingCost });
 
   if (!isDynamicEntry(entry)) return r; // taxa já é real e fixa, não itera
 
-  let previousPrice = null;
+  let previousDelta = null; // sinal do passo anterior (subiu ou desceu)
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const next = resolveFeesForEntry(entry, r.suggestedPrice);
     if (Math.abs(next.fixedFee - fixedFee) < 0.01 && Math.abs(next.pct - pct) < 0.01) break;
 
     const candidate = calculatePricing({ ...values, marketplacePct: next.pct, fixedFee: next.fixedFee, shippingCost });
+    const delta = candidate.suggestedPrice - r.suggestedPrice;
 
-    if (previousPrice !== null && Math.abs(candidate.suggestedPrice - previousPrice) < 0.5) {
-      // Oscilando entre dois valores (ping-pong) — não vai convergir.
-      // Fica com o maior preço dos dois candidatos.
+    if (previousDelta !== null && Math.sign(delta) !== Math.sign(previousDelta) && Math.abs(delta) > 0.01) {
+      // O preço mudou de direção em relação ao passo anterior — ping-pong
+      // de verdade entre dois valores, não vai convergir. Fica com o
+      // maior preço dos dois candidatos.
       r = candidate.suggestedPrice >= r.suggestedPrice ? candidate : r;
       break;
     }
 
-    previousPrice = r.suggestedPrice;
+    previousDelta = delta;
     pct = next.pct;
     fixedFee = next.fixedFee;
     r = candidate;
@@ -648,6 +675,56 @@ function buildAmazonEntry(rate) {
 }
 
 /* ---------------------------------------------------------
+   Shopee (opcional) — sem categoria por produto (a comissão da Shopee não
+   varia por categoria, só por faixa de preço do item), então não é um
+   seletor de categoria como o da Amazon, é um checkbox simples. As faixas
+   também são cadastradas e editáveis pelo admin (mesma tabela
+   marketplace_rates, marketplace="shopee"), uma linha por faixa de preço.
+   --------------------------------------------------------- */
+
+const shopeeIncludeCheckbox = document.getElementById("shopeeInclude");
+let shopeeRates = [];
+
+async function loadShopeeRates() {
+  if (!shopeeIncludeCheckbox) return;
+  try {
+    const resp = await fetch("/api/marketplace-rates?marketplace=shopee", { credentials: "same-origin" });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    shopeeRates = Array.isArray(data.rates) ? data.rates : [];
+  } catch {
+    // sem faixas cadastradas ainda, ou falha de rede — a Shopee
+    // simplesmente não aparece na comparação, o resto funciona normal
+  }
+}
+
+loadShopeeRates();
+
+/** Constrói UMA entrada de cartão a partir de TODAS as linhas de
+ * marketplace_rates da Shopee (cada linha é uma faixa de preço, não uma
+ * categoria escolhida pelo usuário — ver resolveFeesForEntry, kind
+ * "shopee-banded"). */
+function buildShopeeEntry(rates) {
+  const bands = rates
+    .map((r) => ({
+      threshold: r.tier_threshold != null ? Number(r.tier_threshold) : 0,
+      pct: Number(r.pct),
+      fixedFee: Number(r.fixed_fee) || 0,
+    }))
+    .sort((a, b) => a.threshold - b.threshold);
+  if (!bands.length) return null;
+
+  return {
+    id: "shopee",
+    label: "Shopee",
+    theme: "shopee",
+    kind: "shopee-banded",
+    bands,
+    captionNote: "Tabela padrão (CNPJ, ou CPF com até 450 pedidos/90 dias) · taxa de referência, não é consulta em tempo real.",
+  };
+}
+
+/* ---------------------------------------------------------
    Frete pago pelo vendedor — campo manual tem prioridade sobre a
    consulta automática por peso/dimensões (ver mais abaixo). Importante:
    isto é o custo que sai do bolso do VENDEDOR quando ele oferece frete
@@ -869,6 +946,11 @@ form.addEventListener("submit", async (event) => {
   if (selectedAmazonRateId) {
     const rate = amazonRates.find((r) => r.id === selectedAmazonRateId);
     if (rate) feesToUse = [...feesToUse, buildAmazonEntry(rate)];
+  }
+
+  if (shopeeIncludeCheckbox?.checked) {
+    const shopeeEntry = buildShopeeEntry(shopeeRates);
+    if (shopeeEntry) feesToUse = [...feesToUse, shopeeEntry];
   }
 
   renderAllMarketplaces(values, feesToUse, shippingCost);

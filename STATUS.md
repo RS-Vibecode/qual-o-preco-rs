@@ -334,20 +334,73 @@ painel do vendedor, eu confiro e cadastro).
   (sem Amazon) continuam batendo os mesmos números de antes da refatoração.
 - Publicado em produção e testado lá também (não só local).
 
+### 14. Shopee como 3º marketplace — taxa por faixa de preço, não categoria (13/07/2026)
+
+Diferente da Amazon, a comissão da Shopee **não varia por categoria de produto**, só por
+faixa de preço do item (tabela nacional única) — então a modelagem e a UI tiveram que ser
+diferentes, não uma cópia do fluxo da Amazon:
+
+- **Fonte dos dados**: prints da central de ajuda do vendedor Shopee, conferidos em
+  13/07/2026. Tabela de comissão por faixa de preço (até R$79,99: 20%+R$4; R$80–99,99:
+  14%+R$16; R$100–199,99: 14%+R$20; R$200–499,99: 14%+R$26; acima de R$500: 14%+R$26) +
+  regra de item abaixo de R$8 (a tarifa fixa vira metade do preço do produto, não R$4 fixo).
+- **Decisão de escopo, confirmada com você**: cadastramos só a comissão padrão (válida pra
+  CNPJ, e pra CPF com até 450 pedidos em 90 dias). Ficou de fora o adicional de R$3/item pra
+  CPF acima de 450 pedidos/90 dias — é uma métrica de histórico da loja, não dá pra calcular
+  numa cotação avulsa, e o texto da própria Shopee sobre a "regressividade" abaixo de R$12
+  desse adicional específico ficou ambíguo nos prints (números não batiam com um adicional
+  simples de R$3). Cada card da Shopee traz uma nota avisando dessa limitação.
+- **Subsídio Pix da Shopee**: conferido matematicamente (não só copiado) que ele não muda o
+  valor líquido que o vendedor recebe — é um desconto que a própria Shopee banca pro
+  comprador, refletido como uma comissão menor exatamente na mesma proporção. Por isso não
+  entrou na modelagem, só a comissão "cheia" (cartão/boleto), que já é o valor líquido real
+  em qualquer forma de pagamento.
+- **Reaproveitamento de banco**: nenhuma migração de schema nova — cada faixa de preço da
+  Shopee é uma linha comum em `marketplace_rates` (`marketplace="shopee"`), usando o campo
+  `tier_threshold` já existente com um significado diferente do da Amazon (aqui é "a partir
+  de que preço esta linha vale", não "onde o % muda dentro da mesma categoria"). Populada via
+  `scripts/seed-shopee-rates.js` (mesmo padrão idempotente do script da Amazon).
+- **Painel admin generalizado**: a seção "Taxas de marketplace" (antes só Amazon) ganhou um
+  seletor de marketplace (`admin.html`/`admin.js`) — os campos do formulário se adaptam
+  automaticamente (Amazon mostra "muda de % acima de" + "comissão mínima"; Shopee mostra "a
+  partir de que preço" e esconde os campos que não fazem sentido pra ela), sem duplicar
+  código: é a mesma tabela, mesmo formulário, mesma rota `/api/marketplace-rates`.
+- **Calculadora**: campo "Shopee" é um checkbox simples ("Incluir a Shopee"), não um seletor
+  de categoria como o da Amazon — decisão deliberada, já que não existe categoria pra
+  escolher. A faixa de preço certa é escolhida automaticamente pelo próprio motor de cálculo
+  a partir do preço final (mesmo estilo iterativo já usado pro ML e pra Amazon).
+- **Motor de cálculo**: novo tipo de taxa `shopee-banded` em `resolveFeesForEntry`
+  (`script.js`) — percorre as faixas cadastradas e aplica a que vale pro preço candidato,
+  com a regra especial de "abaixo de R$8 = metade do preço" só na faixa inicial.
+- **Bug real encontrado e corrigido durante o teste**: a proteção contra "oscilação" do
+  motor iterativo (criada originalmente pro salto abrupto da taxa fixa do ML perto de
+  R$12,50) media só se o preço tinha "parado de se mexer muito" — e a regra da Shopee
+  abaixo de R$8 converge de forma suave e lenta (não é um salto abrupto), então esse teste
+  cortava a conta cedo demais e entregava um preço errado (testado: custo R$1 e markup 0%
+  devia dar ~R$3,33, mas a versão com bug entregava R$3,78/R$3,79). Corrigido trocando a
+  detecção por "o preço mudou de direção em relação ao passo anterior" (sobe-desce-sobe é
+  oscilação de verdade; sobe-sobe-sobe cada vez mais devagar é só convergência lenta) —
+  mais correto matematicamente e não devia afetar os cálculos do ML/Amazon que já
+  funcionavam (só ficaram com mais margem de iterações de segurança). Testado de novo depois
+  da correção: bateu a conta certinha.
+- Testado localmente (painel admin trocando entre Amazon/Shopee, e dois cenários de cálculo
+  com valores conferidos à mão) antes de publicar em produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança, primeiro deploy em
-produção e agora Amazon como 2º marketplace — tudo testado e funcionando. Falta:
+produção e agora Amazon + Shopee como marketplaces de referência — tudo testado e
+funcionando. Falta:
 
-1. **Adicionar Shopee, TikTok Shop, Magalu e Shein** — mesmo processo da Amazon: você manda
+1. **Adicionar TikTok Shop, Magalu e Shein** — mesmo processo da Amazon/Shopee: você manda
    print da tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e
-   cadastro em `marketplace_rates` (a estrutura já suporta os formatos diferentes: por
-   categoria, por faixa de preço, com/sem tarifa fixa).
+   cadastro em `marketplace_rates` (a estrutura já suporta os formatos encontrados até
+   agora: por categoria, por faixa de preço, com/sem tarifa fixa).
 2. Atualizar o `README.md`: seção do Mercado Livre (modelo por usuário em vez de conexão
    única — e a observação de que testar conexão exige produção, não localhost), resumo da
    revisão de segurança, a seção de tipografia/paleta (referenciar o Manual de Marca RS em
    vez do sistema antigo "inspirado no RS Academy"), e a nova seção de taxas de marketplace
-   editáveis pelo admin (Amazon).
+   editáveis pelo admin (Amazon + Shopee).
 3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
 4. A conta de teste do André Simões (`zanfaust@gmail.com`) ficou criada e conectada — decidir
