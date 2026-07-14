@@ -1,6 +1,7 @@
 # Status do projeto — onde paramos
 
-Última atualização: 13/07/2026 (Amazon adicionada como 2º marketplace, com taxas editáveis pelo admin).
+Última atualização: 13/07/2026 (rodada de fechamento: testes completos, revisão de segurança,
+área de Configurações + popup de ML desconectado, README atualizado).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -457,12 +458,77 @@ em cartões menores que abrem um popup com o detalhe completo ao tocar.
   (colunas empilhadas, popup ocupando a tela com rolagem), abrir/fechar o popup pelas 3 formas
   (botão X, tecla Esc, clique fora) com o foco voltando corretamente pro cartão que abriu.
 
+### 17. Dois bugs de acabamento no layout novo, corrigidos logo em seguida (13/07/2026)
+
+Encontrados no uso real (por você) logo depois do redesenho da seção 16:
+
+- **Selo "menor preço" colidindo com o número de posição**: no cartão compacto (estreito), o
+  selo (fluxo normal) e o círculo de posição (posicionado por cima) disputavam o mesmo canto e
+  ficavam sobrepostos. Corrigido fazendo o selo **substituir** o número quando o cartão é o
+  mais barato (o selo já deixa claro que é o primeiro colocado — não precisa dos dois); nos
+  outros cartões, só o número aparece. No popup completo (sem essa restrição de espaço), os
+  dois continuam aparecendo juntos.
+- **Botão de fechar do popup cortado**: `overflow-y: auto` num único eixo faz o CSS tratar o
+  eixo horizontal como "auto" também (regra da própria especificação) — como o botão de
+  fechar fica de propósito parcialmente pra fora do cartão, ele estava sendo cortado por essa
+  clipagem "acidental", e a fatia cortada ainda contava como conteúdo, abrindo uma barra de
+  rolagem horizontal indesejada. Corrigido movendo a rolagem de verdade pro elemento interno
+  (`.card-modal__content`), deixando o wrapper que contém o botão sem overflow nenhum;
+  aproveitado pra deixar o botão mais bonito (círculo cheio, sombra, gira ao passar o mouse).
+
+Os dois publicados em produção e testados antes de subir pro GitHub.
+
+### 18. Rodada de fechamento: testes completos, revisão de segurança, área de Configurações + popup de ML, README atualizado (13/07/2026)
+
+Pedido seu pra "fechar" esta etapa: testar tudo, conferir segurança, e atualizar a
+documentação — mais um pedido novo de funcionalidade que entrou no meio (área de
+Configurações).
+
+- **Bateria de testes end-to-end**: calculadora com os 5 marketplaces simultâneos (ML
+  Clássico/Premium + Amazon + Shopee + TikTok Shop), popup abrindo/fechando em cada um,
+  validação de campo obrigatório, guards de sessão (sem login redireciona, cliente não acessa
+  admin), responsividade mobile — 30/31 checagens automatizadas passaram (a única "falha" é o
+  aviso já documentado do `frame-ancestors`). CRUD de usuário (criar/redefinir
+  senha/remover/auto-proteção) e de taxas de marketplace testados e confirmados — com
+  limpeza de todo dado de teste criado, verificada direto no banco.
+- **Instabilidade do `vercel dev` local**: depois de um dia inteiro de testes automatizados
+  nesta sessão, o servidor local degradou de vez (chegou a ficar 30s+ sem responder, ou
+  devolver 502). Não é bug de produto — confirmado comparando com produção, que respondeu
+  normalmente o tempo todo. A partir daqui, verificação final passou a ser feita direto em
+  produção quando o local está ruim, sempre com a mesma disciplina de limpeza dos dados de
+  teste depois.
+- **Revisão de segurança focada no que mudou** desde a revisão completa da seção 7 (Amazon,
+  Shopee, TikTok Shop, popup/`<dialog>`, painel admin multi-marketplace): tudo seguro. Achado
+  só 2 itens cosméticos, ambos corrigidos: um `innerHTML` no rótulo dinâmico do formulário de
+  taxas do admin (não explorável — a string vinha de uma constante do próprio código, nunca
+  do banco — mas quebrava o padrão "zero innerHTML" do projeto, trocado por `textContent`), e
+  o comentário do CSP desatualizado sobre o uso de `'unsafe-inline'` em `style-src`.
+- **Nova área de Configurações** (`settings.html`/`settings.js`), pedido seu: o banner
+  "Conectar Mercado Livre" saiu do formulário da calculadora e ganhou página própria, linkada
+  no menu de todas as páginas — libera espaço na precificação sem perder a funcionalidade
+  (conectar/desconectar/status idênticos a antes). O redirecionamento pós-OAuth
+  (`api/auth/callback.js`) passou a voltar pra Configurações em vez da calculadora.
+- **Popup avisando pra conectar o ML**, também pedido seu: quando o cliente abre a
+  calculadora com a conta desconectada, um popup (reaproveitando o mesmo `<dialog>` do popup
+  de detalhe dos cartões) avisa e convida a conectar, com um link direto pra Configurações.
+  Aparece uma vez por sessão do navegador — "Agora não"/Esc/clique fora não incomoda de novo
+  até a aba ser fechada (`sessionStorage`). Testado nos dois cenários: conta conectada (popup
+  não aparece — confirmado com a própria conta do admin) e conta desconectada (popup aparece
+  — confirmado criando um cliente de teste descartável, verificado, removido em seguida).
+- **`README.md` totalmente atualizado**: menção a Amazon/Shopee/TikTok Shop em vez de "em
+  breve", seção de marketplaces de referência reescrita explicando os dois motores de cálculo
+  (`amazon-tiered` por categoria vs. `price-banded` por faixa de preço), árvore de arquitetura
+  com `settings.html`/`settings.js` e os scripts de seed novos, integração do Mercado Livre
+  atualizada pra citar Configurações e o popup, identidade visual com as cores reais de cada
+  marketplace, seção de testes e limitações atualizadas.
+- Tudo publicado em produção, testado lá, e commitado/subido pro GitHub.
+
 ## Onde paramos / próximo passo em aberto
 
-Redesenho visual, integração de ML por usuário, revisão de segurança, primeiro deploy em
-produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, e agora o novo
-layout (formulário em 2 colunas + resultado compacto com popup) — tudo testado e
-funcionando. Falta:
+Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
+deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, o layout
+novo (2 colunas + popup), a área de Configurações e o popup de ML desconectado — tudo testado,
+publicado em produção e documentado no README. Falta:
 
 1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
@@ -471,12 +537,12 @@ funcionando. Falta:
 2. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-3. Atualizar o `README.md`: seção do Mercado Livre (modelo por usuário em vez de conexão
-   única — e a observação de que testar conexão exige produção, não localhost), resumo da
-   revisão de segurança, a seção de tipografia/paleta (referenciar o Manual de Marca RS em
-   vez do sistema antigo "inspirado no RS Academy"), e a nova seção de taxas de marketplace
-   editáveis pelo admin (Amazon + Shopee + TikTok Shop).
-4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-5. A conta de teste do André Simões (`zanfaust@gmail.com`) ficou criada e conectada — decidir
-   se mantém como conta de teste permanente ou remove depois de validado.
+4. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+   algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
+   Mercado Livre, precisa criar uma nova.
+5. **Reiniciar o `vercel dev` local** antes da próxima sessão de testes — ficou degradado
+   depois de tanto uso seguido (ver seção 18).
+6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+   pra outras preferências de conta que vierem depois.
