@@ -1,7 +1,8 @@
 # Status do projeto — onde paramos
 
-Última atualização: 13/07/2026 (rodada de fechamento: testes completos, revisão de segurança,
-área de Configurações + popup de ML desconectado, README atualizado).
+Última atualização: 14/07/2026 (senha escolhida na criação de usuário, painel reorganizado,
+logo clicável, e busca de produtos já cadastrados no Mercado Livre — traz categoria real e
+frete automático quando disponível).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -523,26 +524,80 @@ Configurações).
   marketplace, seção de testes e limitações atualizadas.
 - Tudo publicado em produção, testado lá, e commitado/subido pro GitHub.
 
+### 19. Senha escolhida na criação de usuário + painel de resultado reorganizado + logo clicável (14/07/2026)
+
+Três pedidos pequenos, seguidos:
+
+- **Senha escolhida pelo admin**: antes a senha do usuário novo era sempre gerada sozinha; agora
+  tem um campo pra digitar (mínimo 8 caracteres, mostrar/ocultar igual ao login) com um botão
+  "Gerar senha forte" pra quem preferir não pensar numa — mas nada acontece sem uma escolha
+  explícita. Validado nos dois lados (cliente e servidor); testado criando um usuário de teste
+  com senha própria e fazendo login de verdade com ela, confirmando que é a senha digitada (não
+  uma trocada por engano) que fica valendo.
+- **Painel "Usuário criado"/"Senha redefinida" reorganizado**: estava quebrando de forma feia
+  (rótulo, valor e botão tentando caber numa linha só dentro de um card estreito, com
+  `flex-wrap` imprevisível). Refeito com rótulo sempre acima do valor.
+- **Logo do cabeçalho virou link** pra calculadora, nas 4 páginas que usam o cabeçalho padrão
+  (calculadora, admin, perfil, configurações) — só decorativa antes.
+
+### 20. Busca de produtos já cadastrados no Mercado Livre (14/07/2026)
+
+Feedback da diretora de e-commerce, repassado por você: "dá pra puxar os produtos cadastrados
+pra fazer os cálculos?" e "o frete não está puxando". Investiguei ao vivo na própria conta da
+RS antes de prometer qualquer coisa (2.596 produtos cadastrados lá) — resultado:
+
+- **O frete "não estava puxando" porque nunca puxou sozinho** — sempre exigiu peso/dimensões
+  digitados à mão (ou frete manual). Não era bug; era falta de um jeito fácil de preencher
+  esse dado, que é exatamente o que esta feature resolve.
+- **Testei a API real antes de implementar**: busca por nome/SKU dentro dos produtos da própria
+  conta funciona bem; category_id sempre vem certo; peso/dimensões da embalagem só são
+  confiáveis quando o vendedor preencheu os atributos `SELLER_PACKAGE_*` no anúncio (testei
+  numa amostra de 20 produtos: 16 tinham alguma dimensão, mas os atributos genéricos
+  HEIGHT/WIDTH/LENGTH geralmente descrevem o PRODUTO, não a caixa de envio — um item até tinha
+  unidade errada num desses campos genéricos). Decisão: só usar `SELLER_PACKAGE_*` pro
+  preenchimento automático; sem isso completo, o campo de frete fica vazio, igual a hoje.
+- **O que não dá pra puxar**: o custo do produto. Nenhum marketplace expõe isso, é dado
+  interno (nota fiscal/fornecedor) — deixei isso claro pra você antes de começar, pra não criar
+  expectativa que a ferramenta não pode entregar.
+- **Novo campo "Produto cadastrado"** na seção Mercado Livre do formulário — só aparece com a
+  conta conectada. Busca nos anúncios reais, e ao escolher um: aplica a categoria real (mais
+  precisa que a busca por nome livre, que continua existindo pra produtos ainda não anunciados)
+  e, quando disponível, preenche peso/dimensões do frete sozinho.
+- **Sem rota nova**: `api/ml-category-search.js` ganhou um modo (`mode=product`) em vez de virar
+  um 13º arquivo em `api/` — o plano Hobby da Vercel permite só 12.
+- Testado em produção com produtos reais: busca funcionando, categoria aplicada (confirmado
+  pelo selo "Taxa real consultada agora"), e um produto COM dimensões cadastradas preencheu os
+  4 campos de frete com os valores exatos vistos direto na API (143g / 3×11×18cm) — cálculo
+  rodou normal depois.
+- **Pendente, a pedido seu**: a reserva de X% pra cupom/campanha/anúncio (mencionada na mesma
+  conversa com a diretora) ainda não foi implementada — combinado fazer depois desta.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
 deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, o layout
-novo (2 colunas + popup), a área de Configurações e o popup de ML desconectado — tudo testado,
-publicado em produção e documentado no README. Falta:
+novo (2 colunas + popup), a área de Configurações, o popup de ML desconectado, senha escolhida
+na criação de usuário e a busca de produtos cadastrados — tudo testado, publicado em produção.
+Falta:
 
-1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
+1. **Reserva de % pra cupom/campanha/anúncio** — pedido da diretora de e-commerce, combinado
+   como próximo passo logo depois da busca de produtos cadastrados (ver seção 20). Ainda não
+   começado.
+2. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
    `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
    categoria, por faixa de preço, com/sem tarifa fixa).
-2. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+3. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-4. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-5. **Reiniciar o `vercel dev` local** antes da próxima sessão de testes — ficou degradado
-   depois de tanto uso seguido (ver seção 18).
-6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+6. **`vercel dev` local ficou fora do ar** durante a sessão de 14/07 (não só lento — parou de
+   responder de vez) — precisa reiniciar antes da próxima rodada de testes locais.
+7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
+8. README.md ainda não documenta a busca de produtos cadastrados nem o campo de senha escolhida
+   (seções 19 e 20) — vale atualizar numa próxima passada de documentação.
