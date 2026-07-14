@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Meu perfil | Qual o Preço?</title>
-<meta name="description" content="Edite seus dados de perfil." />
+<title>Configurações | Qual o Preço?</title>
+<meta name="description" content="Gerencie a conexão com o Mercado Livre e outras preferências da sua conta." />
 <meta name="theme-color" content="#F4F3F3" />
 
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://yywveafqgmzbqqtdbuzz.supabase.co data:; connect-src 'self'; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests" />
@@ -56,65 +56,30 @@
 
 <main class="admin-page">
   <div class="page-container">
-    <section class="card reveal" aria-labelledby="profile-title">
-      <p class="page-eyebrow">Sua conta</p>
-      <h1 id="profile-title" class="card__title">Meu perfil</h1>
 
-      <div class="profile-photo-row">
-        <div class="profile-photo" id="photoPreviewWrap">
-          <img id="photoPreviewImg" alt="" hidden />
-          <span id="photoPreviewInitial"></span>
+    <div class="admin-page__intro reveal">
+      <p class="page-eyebrow">Configurações</p>
+      <h1 class="admin-page__title">Integrações e preferências</h1>
+      <p class="admin-page__subtitle">Conecte contas externas pra deixar a calculadora mais precisa. Mais opções entram aqui conforme a ferramenta cresce.</p>
+    </div>
+
+    <section class="card reveal" aria-labelledby="ml-settings-title">
+      <h2 id="ml-settings-title" class="card__title">Mercado Livre</h2>
+      <p class="field__help" style="margin-top: -0.75rem; margin-bottom: 1.5rem;">Conecte sua conta pra a calculadora usar a comissão e o frete <strong>reais</strong> da categoria consultada, em vez da taxa de referência.</p>
+
+      <div class="ml-connect" id="mlConnect" hidden>
+        <div class="ml-connect__text">
+          <p class="ml-connect__title">
+            <span class="ml-connect__badge" id="mlConnectBadge" hidden>✓ Conectado</span>
+            <span id="mlConnectTitle"></span>
+          </p>
+          <p class="ml-connect__subtitle" id="mlConnectSubtitle"></p>
         </div>
-        <div>
-          <div class="profile-photo-actions">
-            <label class="btn btn--secondary" for="photoInput">Trocar foto</label>
-            <button type="button" class="btn btn--secondary" id="removePhotoBtn">Remover foto</button>
-          </div>
-          <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden />
-          <p class="field__help">JPG, PNG ou WebP, até 3MB.</p>
-        </div>
+        <a class="btn btn--secondary" id="mlConnectBtn" href="/api/auth/start" hidden>Conectar Mercado Livre</a>
+        <button type="button" class="btn btn--secondary" id="mlDisconnectBtn" hidden>Desconectar</button>
       </div>
-
-      <p class="auth-card__form-error" id="form-error" role="alert" hidden></p>
-      <p class="admin-created-result" id="successMsg" hidden>
-        <span class="admin-created-result__title">Perfil atualizado!</span>
-      </p>
-
-      <form id="profile-form" novalidate>
-        <div class="field">
-          <label for="fullName">Nome completo</label>
-          <div class="input-wrap">
-            <input type="text" id="fullName" name="fullName" autocomplete="name" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="position">Cargo <span class="field__optional">(opcional)</span></label>
-          <div class="input-wrap">
-            <input type="text" id="position" name="position" autocomplete="organization-title" placeholder="Ex: Gerente de vendas" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="phone">Telefone <span class="field__optional">(opcional)</span></label>
-          <div class="input-wrap">
-            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="Ex: (34) 99999-9999" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="email">E-mail</label>
-          <div class="input-wrap">
-            <input type="email" id="email" name="email" autocomplete="email" />
-          </div>
-          <p class="field__help">Esse é o e-mail usado pra entrar na ferramenta.</p>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn--primary" id="profile-submit">Salvar alterações</button>
-        </div>
-      </form>
     </section>
+
   </div>
 </main>
 
@@ -131,6 +96,6 @@
 <script src="auth-guard.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="background-fx.js"></script>
-<script src="profile.js"></script>
+<script src="settings.js"></script>
 </body>
 </html>

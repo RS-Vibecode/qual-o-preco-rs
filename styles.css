@@ -1587,6 +1587,23 @@ dialog.card-modal::backdrop {
   outline-offset: 2px;
 }
 
+/* Popup avisando pra conectar o Mercado Livre (ver checkMlConnectionPrompt
+   em script.js) — reaproveita o mesmo <dialog> do popup de detalhe do
+   cartão, só com conteúdo diferente (.card em vez de .compare-card). */
+.ml-prompt__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-3);
+}
+.ml-prompt__text {
+  font-size: 0.92rem;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin-bottom: var(--space-5);
+}
+
 .compare-card__rank {
   position: absolute;
   top: var(--space-5);

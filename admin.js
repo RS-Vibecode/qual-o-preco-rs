@@ -337,21 +337,24 @@ const rateFieldIds = ["rateCategory", "ratePct", "rateMinFee", "rateTierThreshol
 const MARKETPLACE_COPY = {
   amazon: {
     categoryLabel: "Categoria",
-    tierLabel: 'Muda de % acima de <span class="field__optional">(opcional)</span>',
+    tierMain: "Muda de % acima de ",
+    tierHint: "(opcional)",
     showPctAbove: true,
     showMinFee: true,
     fixedFeeHelp: 'Some à comissão — use pra tarifas como a de "Mídia" (R$2,00 fixo, plano Individual) na Amazon.',
   },
   shopee: {
     categoryLabel: "Faixa de preço (descrição)",
-    tierLabel: 'A partir de que preço essa faixa vale <span class="field__optional">(0 = faixa inicial)</span>',
+    tierMain: "A partir de que preço essa faixa vale ",
+    tierHint: "(0 = faixa inicial)",
     showPctAbove: false,
     showMinFee: false,
     fixedFeeHelp: "Tarifa fixa da própria faixa (ex.: R$16 na faixa de R$80 a R$99,99) — não é opcional pra Shopee.",
   },
   tiktok: {
     categoryLabel: "Faixa de preço (descrição)",
-    tierLabel: 'A partir de que preço essa faixa vale <span class="field__optional">(0 = faixa inicial)</span>',
+    tierMain: "A partir de que preço essa faixa vale ",
+    tierHint: "(0 = faixa inicial)",
     showPctAbove: false,
     showMinFee: false,
     fixedFeeHelp: 'Tarifa fixa da própria faixa (chamada de "taxa por item vendido" pelo TikTok Shop) — não é opcional.',
@@ -361,7 +364,15 @@ const MARKETPLACE_COPY = {
 function updateRateFormCopy() {
   const copy = MARKETPLACE_COPY[rateMarketplaceSelect.value] || MARKETPLACE_COPY.amazon;
   document.getElementById("rateCategory-label").textContent = copy.categoryLabel;
-  document.getElementById("rateTierThreshold-label").innerHTML = copy.tierLabel;
+
+  const tierLabelEl = document.getElementById("rateTierThreshold-label");
+  tierLabelEl.replaceChildren();
+  tierLabelEl.append(document.createTextNode(copy.tierMain));
+  const hint = document.createElement("span");
+  hint.className = "field__optional";
+  hint.textContent = copy.tierHint;
+  tierLabelEl.appendChild(hint);
+
   document.getElementById("ratePctAbove-field").hidden = !copy.showPctAbove;
   document.getElementById("rateMinFee-field").hidden = !copy.showMinFee;
   document.getElementById("rateFixedFee-help").textContent = copy.fixedFeeHelp;

@@ -12,9 +12,11 @@
   cada tipo de recurso liberado explicitamente apenas para o necessário.
   Nenhuma origem externa é permitida — todo CSS, JS, fonte, ícone e
   imagem é servido pelo próprio domínio. 'unsafe-inline' em style-src é
-  necessário só porque o campo de estrelas/cometas do herói posiciona
-  cada elemento via JS (element.style.*), que o CSP trata como estilo
-  inline; nenhum dado de usuário chega a essa parte do código, então o
+  necessário porque várias partes do JS ajustam estilo via
+  element.style.* (estrelas/cometas do herói, barra proporcional dos
+  cartões, atraso de animação escalonado) — o CSP trata isso como
+  estilo inline. Em todos os casos o valor aplicado é numérico/calculado
+  pelo próprio código, nunca texto vindo do usuário ou do banco, então o
   risco prático é mínimo. script-src permanece estrito, sem
   'unsafe-inline' nem 'unsafe-eval'. connect-src 'self' (era 'none') foi
   liberado só para as próprias rotas /api/* deste domínio — a busca de
@@ -76,6 +78,7 @@
           <span class="user-chip__role" id="userChipRole"></span>
         </span>
         <a class="user-chip__admin-link" id="userChipProfileLink" href="profile.html">Meu perfil</a>
+        <a class="user-chip__admin-link" href="settings.html">Configurações</a>
         <a class="user-chip__admin-link" id="userChipAdminLink" href="admin.html" hidden>Painel admin</a>
         <button type="button" class="user-chip__logout" id="userChipLogout">Sair</button>
       </div>
@@ -102,18 +105,6 @@
     <section class="card calc-form-card reveal" aria-labelledby="form-title">
       <span class="card__sticker" aria-hidden="true">100% grátis</span>
       <h2 id="form-title" class="card__title">Informe os dados do produto</h2>
-
-      <div class="ml-connect" id="mlConnect" hidden>
-        <div class="ml-connect__text">
-          <p class="ml-connect__title">
-            <span class="ml-connect__badge" id="mlConnectBadge" hidden>✓ Conectado</span>
-            <span id="mlConnectTitle"></span>
-          </p>
-          <p class="ml-connect__subtitle" id="mlConnectSubtitle"></p>
-        </div>
-        <a class="btn btn--secondary" id="mlConnectBtn" href="/api/auth/start" hidden>Conectar Mercado Livre</a>
-        <button type="button" class="btn btn--secondary" id="mlDisconnectBtn" hidden>Desconectar</button>
-      </div>
 
       <form id="pricing-form" novalidate>
       <div class="calc-form-cols">
@@ -369,6 +360,25 @@
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
       <div class="card-modal__content" id="cardModalContent"></div>
+    </div>
+  </dialog>
+
+  <dialog class="card-modal" id="mlPromptModal">
+    <div class="card-modal__inner">
+      <button type="button" class="card-modal__close" id="mlPromptCloseBtn" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="card-modal__content">
+        <div class="card ml-prompt">
+          <p class="page-eyebrow">Mercado Livre</p>
+          <h2 class="ml-prompt__title">Conecte sua conta pra ver dados em tempo real</h2>
+          <p class="ml-prompt__text">Sem conectar, a calculadora usa taxas de referência em vez da comissão e do frete reais da sua conta.</p>
+          <div class="form-actions">
+            <a class="btn btn--primary" href="settings.html">Conectar agora</a>
+            <button type="button" class="btn btn--secondary" id="mlPromptDismissBtn">Agora não</button>
+          </div>
+        </div>
+      </div>
     </div>
   </dialog>
 </main>

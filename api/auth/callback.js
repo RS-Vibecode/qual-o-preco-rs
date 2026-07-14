@@ -54,13 +54,13 @@ module.exports = async (req, res) => {
     const userId = await resolveOAuthState(state);
     if (!userId) {
       res.status(400).send(
-        errorPage("Link expirado", "Esse link de autorização já foi usado ou expirou. Volte à calculadora e clique em \"Conectar Mercado Livre\" de novo.")
+        errorPage("Link expirado", "Esse link de autorização já foi usado ou expirou. Volte em Configurações e clique em \"Conectar Mercado Livre\" de novo.")
       );
       return;
     }
 
     await connectWithAuthorizationCode(code, userId);
-    res.writeHead(302, { Location: "/index.html?ml_connected=1" });
+    res.writeHead(302, { Location: "/settings.html?ml_connected=1" });
     res.end();
   } catch (err) {
     console.error("Erro ao conectar Mercado Livre:", err);

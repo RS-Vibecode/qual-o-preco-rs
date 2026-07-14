@@ -907,62 +907,38 @@ async function fetchRealMlShipping({ price, weightG, length, width, height }) {
 }
 
 /* ---------------------------------------------------------
-   Conexão do usuário com o Mercado Livre (opcional) — cada
-   cliente conecta a própria conta pra ter taxa/frete reais da conta
-   dele, em vez da taxa de referência. Ver /api/auth/start,
-   /api/ml-connection (GET = status, POST = desconectar).
+   Aviso de Mercado Livre desconectado — conectar/desconectar de verdade
+   mora em settings.html/settings.js agora (pra liberar espaço aqui na
+   calculadora); esta calculadora só avisa, com um popup, que dá pra
+   conectar e ter dados reais. Um "Agora não"/Esc/clique fora não
+   incomoda de novo na mesma aba (sessionStorage) — só um lembrete
+   pontual, não um bloqueio.
    --------------------------------------------------------- */
 
-async function initMlConnectBanner() {
-  const banner = document.getElementById("mlConnect");
-  const badgeEl = document.getElementById("mlConnectBadge");
-  const titleEl = document.getElementById("mlConnectTitle");
-  const subtitleEl = document.getElementById("mlConnectSubtitle");
-  const connectBtn = document.getElementById("mlConnectBtn");
-  const disconnectBtn = document.getElementById("mlDisconnectBtn");
-  if (!banner) return;
+const mlPromptModal = document.getElementById("mlPromptModal");
 
+async function checkMlConnectionPrompt() {
+  if (!mlPromptModal || sessionStorage.getItem("mlPromptDismissed") === "1") return;
   try {
     const resp = await fetch("/api/ml-connection", { credentials: "same-origin" });
     if (!resp.ok) return;
     const { connected } = await resp.json();
-
-    banner.classList.toggle("ml-connect--connected", connected);
-    badgeEl.hidden = !connected;
-    if (connected) {
-      titleEl.textContent = "Mercado Livre conectado";
-      subtitleEl.textContent = "A calculadora usa a taxa e o frete reais da sua conta quando disponíveis.";
-      connectBtn.hidden = true;
-      disconnectBtn.hidden = false;
-    } else {
-      titleEl.textContent = "Conecte sua conta do Mercado Livre";
-      subtitleEl.textContent = "Sem conectar, a calculadora usa taxas de referência em vez dos valores reais da sua conta.";
-      connectBtn.hidden = false;
-      disconnectBtn.hidden = true;
-    }
-    banner.hidden = false;
-
-    if (new URLSearchParams(window.location.search).get("ml_connected") === "1") {
-      subtitleEl.textContent = "Conectado agora! " + subtitleEl.textContent;
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    if (!connected) mlPromptModal.showModal();
   } catch {
-    // se a checagem falhar, o banner simplesmente não aparece
+    // falha na checagem — não incomoda o usuário com popup nesse caso
   }
 }
 
-document.getElementById("mlDisconnectBtn")?.addEventListener("click", async () => {
-  const disconnectBtn = document.getElementById("mlDisconnectBtn");
-  disconnectBtn.disabled = true;
-  try {
-    await fetch("/api/ml-connection", { method: "POST", credentials: "same-origin" });
-  } finally {
-    disconnectBtn.disabled = false;
-    initMlConnectBanner();
-  }
+mlPromptModal?.addEventListener("click", (event) => {
+  if (event.target === mlPromptModal) mlPromptModal.close();
 });
+mlPromptModal?.addEventListener("close", () => {
+  sessionStorage.setItem("mlPromptDismissed", "1");
+});
+document.getElementById("mlPromptCloseBtn")?.addEventListener("click", () => mlPromptModal.close());
+document.getElementById("mlPromptDismissBtn")?.addEventListener("click", () => mlPromptModal.close());
 
-initMlConnectBanner();
+checkMlConnectionPrompt();
 
 const submitBtn = form.querySelector('button[type="submit"]');
 const submitBtnDefaultText = submitBtn.textContent;
