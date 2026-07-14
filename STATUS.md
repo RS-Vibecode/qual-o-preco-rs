@@ -663,6 +663,25 @@ novas):
 Testado local (chips, cartões compactos, popup, tema claro/escuro) — nenhuma imagem falhou ao
 carregar. Publicado em produção.
 
+### 25. Menu de usuário simplificado + correção de tooltips cortados (14/07/2026)
+
+Dois ajustes pedidos pelo cliente depois de ver tudo no ar:
+
+- **Cabeçalho**: os 4-5 botões separados (Meu perfil, Configurações, Painel admin, Sair...)
+  sempre visíveis viravam poluição visual. Viraram um único gatilho (avatar + nome) que abre um
+  menu — mesmo padrão de "clique pra revelar" já usado nos chips de marketplace e nos
+  accordions. Lógica em `auth-guard.js` (compartilhado pelas 4 páginas com o chip de usuário).
+- **Tooltips cortados**: o balão de ajuda dos campos dentro dos chips de marketplace ficava
+  cortado exatamente na borda do próprio cartão — causa raiz era `overflow: hidden` em
+  `.marketplace-chip` (usado só por precaução, sem necessidade real), que corta qualquer
+  descendente que escape da caixa, inclusive um tooltip `position: absolute` por design. Trocado
+  pra `overflow: visible`, z-index mais alto no balão, e uma checagem em JS
+  (`calc-form-ui.js`) que alinha o balão pela direita quando vazaria pra fora da tela.
+
+Testado local (menu abre/fecha, clique fora e Esc fecham, link "Calculadora" só aparece fora do
+index.html, tooltips não cortam mais em nenhum dos dois casos reportados). Publicado em
+produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
