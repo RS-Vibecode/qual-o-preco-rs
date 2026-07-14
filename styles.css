@@ -792,12 +792,27 @@ body.auth-pending main {
   font-family: inherit;
   color: inherit;
 }
-.marketplace-chip__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--chip-accent);
+/* Logo oficial de cada marketplace (ver assets/marketplace-logos) — um
+   selo branco de tamanho fixo pra normalizar formato/proporção entre
+   logos bem diferentes entre si (o da Shopee é um retângulo, o do TikTok
+   é bem estreito, o do ML já vem redondo), independente do brilho de
+   fundo do cartão (claro ou escuro). */
+.marketplace-chip__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  padding: 5px;
+}
+.marketplace-chip__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .marketplace-chip__name {
   font-weight: 700;
@@ -1799,6 +1814,12 @@ body.auth-pending main {
 .compare-card--compact .compare-card__name {
   padding-right: 34px;
 }
+.compare-card--compact .compare-card__logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  padding: 3px;
+}
 .compare-card__hint {
   display: block;
   margin-top: var(--space-3);
@@ -1992,12 +2013,39 @@ dialog.card-modal::backdrop {
 .compare-card__real-badge::before {
   content: "✓";
 }
+.compare-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+/* Selo branco de tamanho fixo com o logo oficial do marketplace (ver
+   assets/marketplace-logos) — mesmo tratamento usado no seletor de
+   marketplaces do formulário, pra manter os dois lados (entrada e
+   resultado) visualmente consistentes. */
+.compare-card__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  padding: 4px;
+}
+.compare-card__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .compare-card__name {
   position: relative;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.15rem;
-  margin-bottom: var(--space-3);
+  margin-bottom: 0;
   padding-right: 36px;
 }
 .compare-card__price {

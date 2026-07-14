@@ -496,10 +496,25 @@ function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, include
     badgesRow.appendChild(realBadge);
   }
 
+  const nameRow = document.createElement("div");
+  nameRow.className = "compare-card__name-row";
+
+  const logo = document.createElement("span");
+  logo.className = "compare-card__logo";
+  const logoImg = document.createElement("img");
+  logoImg.src = `assets/marketplace-logos/${entry.theme}.svg`;
+  logoImg.alt = "";
+  logoImg.width = 18;
+  logoImg.height = 18;
+  logo.appendChild(logoImg);
+  nameRow.appendChild(logo);
+
   const name = document.createElement("p");
   name.className = "compare-card__name";
   name.textContent = entry.label;
-  frag.appendChild(name);
+  nameRow.appendChild(name);
+
+  frag.appendChild(nameRow);
 
   const price = document.createElement("p");
   price.className = "compare-card__price";
