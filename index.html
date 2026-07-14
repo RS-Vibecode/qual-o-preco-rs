@@ -189,6 +189,26 @@
             <span class="field-group__badge">opcional</span>
           </legend>
 
+          <div class="field" id="productQueryField" hidden>
+            <label for="productQuery">Produto cadastrado <span class="field__optional">(traz categoria e frete automaticamente)</span></label>
+            <div class="input-wrap">
+              <input
+                type="text"
+                id="productQuery"
+                name="productQuery"
+                autocomplete="off"
+                placeholder="Digite o nome ou SKU de um produto já anunciado..."
+                aria-describedby="productQuery-help"
+                aria-expanded="false"
+                aria-controls="productSuggestions"
+                role="combobox"
+              />
+            </div>
+            <ul class="category-suggestions" id="productSuggestions" role="listbox" hidden></ul>
+            <p class="category-selected" id="productSelected" hidden></p>
+            <p class="field__help" id="productQuery-help">Busca nos seus produtos já anunciados no Mercado Livre — usa a categoria real do anúncio e, quando disponível, preenche o peso/dimensões do frete abaixo sozinho.</p>
+          </div>
+
           <div class="field">
             <label for="categoryQuery">Categoria do produto <span class="field__optional">(traz a taxa real)</span></label>
             <div class="input-wrap">
@@ -206,7 +226,7 @@
             </div>
             <ul class="category-suggestions" id="categorySuggestions" role="listbox" hidden></ul>
             <p class="category-selected" id="categorySelected" hidden></p>
-            <p class="field__help" id="categoryQuery-help">Digite o nome do produto para buscarmos a taxa REAL do Mercado Livre por categoria. Sem isso, usamos a taxa de referência (ver nota nos cartões).</p>
+            <p class="field__help" id="categoryQuery-help">Sem cadastro no Mercado Livre ainda? Digite o nome do produto aqui pra buscarmos a taxa REAL por categoria. Sem isso, usamos a taxa de referência (ver nota nos cartões).</p>
           </div>
         </fieldset>
 

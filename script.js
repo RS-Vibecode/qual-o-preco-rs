@@ -666,6 +666,118 @@ document.addEventListener("click", (event) => {
   }
 });
 
+/* ---------------------------------------------------------
+   Produto já cadastrado no Mercado Livre (opcional, só aparece com a
+   conta conectada — ver initMlAwareFeatures) — busca nos ANÚNCIOS REAIS
+   do próprio usuário em vez da taxonomia pública do ML (ver busca de
+   categoria acima). Reaproveita a categoria real do anúncio (mais
+   precisa que adivinhar pelo nome) e, quando o vendedor já declarou peso
+   e dimensões da embalagem lá no anúncio, preenche o frete sozinho.
+   --------------------------------------------------------- */
+
+const productInput = document.getElementById("productQuery");
+const productSuggestions = document.getElementById("productSuggestions");
+const productSelectedEl = document.getElementById("productSelected");
+
+let selectedProduct = null; // { id, title, package }
+let productSearchTimer = null;
+
+function clearProductSuggestions() {
+  productSuggestions.replaceChildren();
+  productSuggestions.hidden = true;
+  productInput.setAttribute("aria-expanded", "false");
+}
+
+function selectProduct(product) {
+  selectedProduct = product;
+  productInput.value = product.title;
+  clearProductSuggestions();
+
+  // Mesma variável que a busca de categoria usa — o resto do cálculo
+  // (fetchRealMlFees) não precisa saber se a categoria veio de uma busca
+  // livre ou de um produto já cadastrado.
+  selectedCategory = { id: product.category_id, name: product.title };
+  categoryInput.value = "";
+  categorySelectedEl.hidden = true;
+
+  if (product.package) {
+    const { weightG, length, width, height } = product.package;
+    document.getElementById("packageWeight").value = String(weightG / 1000).replace(".", ",");
+    document.getElementById("packageLength").value = String(length).replace(".", ",");
+    document.getElementById("packageWidth").value = String(width).replace(".", ",");
+    document.getElementById("packageHeight").value = String(height).replace(".", ",");
+    productSelectedEl.textContent = `Produto selecionado: ${product.title} — categoria e frete (peso/dimensões) preenchidos automaticamente.`;
+  } else {
+    productSelectedEl.textContent = `Produto selecionado: ${product.title} — categoria preenchida automaticamente. Este anúncio não tem peso/dimensões de embalagem cadastrados no Mercado Livre; preencha o frete manualmente abaixo, se quiser.`;
+  }
+  productSelectedEl.hidden = false;
+}
+
+function renderProductSuggestions(results) {
+  clearProductSuggestions();
+  if (!results.length) return;
+
+  const fragment = document.createDocumentFragment();
+  results.forEach((p) => {
+    const li = document.createElement("li");
+    li.setAttribute("role", "option");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "category-suggestions__item";
+    const priceText = Number.isFinite(p.price) ? ` · ${formatBRL(p.price)}` : "";
+    const skuText = p.sku ? ` · SKU ${p.sku}` : "";
+    btn.textContent = `${p.title}${priceText}${skuText}`;
+    btn.addEventListener("click", () => selectProduct(p));
+    li.appendChild(btn);
+    fragment.appendChild(li);
+  });
+  productSuggestions.appendChild(fragment);
+  productSuggestions.hidden = false;
+  productInput.setAttribute("aria-expanded", "true");
+}
+
+productInput?.addEventListener("input", () => {
+  selectedProduct = null;
+  productSelectedEl.hidden = true;
+  const query = productInput.value.trim();
+
+  clearTimeout(productSearchTimer);
+  if (query.length < 3) {
+    clearProductSuggestions();
+    return;
+  }
+
+  productSearchTimer = setTimeout(async () => {
+    try {
+      const resp = await fetch(`/api/ml-category-search?mode=product&q=${encodeURIComponent(query)}`, { credentials: "same-origin" });
+      if (!resp.ok) {
+        clearProductSuggestions();
+        return;
+      }
+      const data = await resp.json();
+      renderProductSuggestions(data.results || []);
+    } catch {
+      clearProductSuggestions();
+    }
+  }, 300);
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target !== productInput && !productSuggestions.contains(event.target)) {
+    clearProductSuggestions();
+  }
+});
+
+// Escolher um produto cadastrado e digitar na busca de categoria livre
+// são jeitos alternativos de chegar na mesma coisa (qual categoria usar)
+// — escolher um invalida o outro, pra não ficar ambíguo qual valeu.
+categoryInput.addEventListener("input", () => {
+  if (!selectedProduct) return;
+  selectedProduct = null;
+  productInput.value = "";
+  productSelectedEl.hidden = true;
+});
+
 async function fetchRealMlFees(price) {
   if (!selectedCategory) return null;
   try {
@@ -907,25 +1019,36 @@ async function fetchRealMlShipping({ price, weightG, length, width, height }) {
 }
 
 /* ---------------------------------------------------------
-   Aviso de Mercado Livre desconectado — conectar/desconectar de verdade
-   mora em settings.html/settings.js agora (pra liberar espaço aqui na
-   calculadora); esta calculadora só avisa, com um popup, que dá pra
-   conectar e ter dados reais. Um "Agora não"/Esc/clique fora não
-   incomoda de novo na mesma aba (sessionStorage) — só um lembrete
-   pontual, não um bloqueio.
+   Estado da conexão com o Mercado Livre, checado uma vez ao carregar a
+   página — alimenta duas coisas:
+   1. O popup avisando pra conectar (conectar/desconectar de verdade mora
+      em settings.html/settings.js agora, pra liberar espaço aqui na
+      calculadora). Um "Agora não"/Esc/clique fora não incomoda de novo
+      na mesma aba (sessionStorage) — só um lembrete pontual, não um
+      bloqueio.
+   2. A busca de "produto cadastrado" (ver mais abaixo) só faz sentido
+      com a conta conectada — o campo fica escondido até confirmarmos
+      que a busca de verdade vai funcionar, em vez de aparecer e falhar.
    --------------------------------------------------------- */
 
 const mlPromptModal = document.getElementById("mlPromptModal");
+let mlConnectedState = false;
 
-async function checkMlConnectionPrompt() {
-  if (!mlPromptModal || sessionStorage.getItem("mlPromptDismissed") === "1") return;
+async function initMlAwareFeatures() {
+  const productField = document.getElementById("productQueryField");
   try {
     const resp = await fetch("/api/ml-connection", { credentials: "same-origin" });
-    if (!resp.ok) return;
-    const { connected } = await resp.json();
-    if (!connected) mlPromptModal.showModal();
+    if (resp.ok) {
+      ({ connected: mlConnectedState } = await resp.json());
+    }
   } catch {
-    // falha na checagem — não incomoda o usuário com popup nesse caso
+    // falha na checagem — trata como desconectado, sem travar a página
+  }
+
+  if (productField) productField.hidden = !mlConnectedState;
+
+  if (!mlConnectedState && mlPromptModal && sessionStorage.getItem("mlPromptDismissed") !== "1") {
+    mlPromptModal.showModal();
   }
 }
 
@@ -938,7 +1061,7 @@ mlPromptModal?.addEventListener("close", () => {
 document.getElementById("mlPromptCloseBtn")?.addEventListener("click", () => mlPromptModal.close());
 document.getElementById("mlPromptDismissBtn")?.addEventListener("click", () => mlPromptModal.close());
 
-checkMlConnectionPrompt();
+initMlAwareFeatures();
 
 const submitBtn = form.querySelector('button[type="submit"]');
 const submitBtnDefaultText = submitBtn.textContent;
@@ -1081,6 +1204,9 @@ clearBtn.addEventListener("click", () => {
   selectedCategory = null;
   categorySelectedEl.hidden = true;
   clearCategorySuggestions();
+  selectedProduct = null;
+  productSelectedEl.hidden = true;
+  clearProductSuggestions();
   resultsSection.hidden = true;
   resultsEmptyEl.hidden = false;
   document.getElementById("productCost").focus();
