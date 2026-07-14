@@ -709,6 +709,236 @@ body.auth-pending main {
   min-width: 0;
 }
 
+/* ===== Blocos da calculadora (repaginação) =====
+   O formulário passou de 7 <fieldset> soltos, todos com o mesmo peso
+   visual, pra 3 blocos com hierarquia clara: essenciais (2 colunas,
+   sempre visível), marketplaces (chips clicáveis) e frete (accordion
+   fechado por padrão). Só a apresentação muda — os mesmos campos/ids que
+   script.js já lê continuam existindo, só reembrulhados. */
+.calc-block {
+  margin-top: var(--space-7);
+}
+.calc-block__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-1);
+  margin-bottom: var(--space-4);
+}
+
+/* ---- Seletor de marketplaces (chips) ---- */
+.marketplace-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-3);
+  /* Sem isso, os grid items esticam pra altura do maior (o chip do ML,
+     sempre expandido) — os chips fechados (Amazon/Shopee/TikTok) ficavam
+     com um vão vazio embaixo do conteúdo pra "empatar" a altura. */
+  align-items: start;
+}
+.marketplace-chip {
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--bg-4);
+  overflow: hidden;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.marketplace-chip.is-active {
+  border-color: var(--chip-accent, var(--blue));
+  box-shadow: 0 0 0 3px var(--chip-glow, rgba(40, 128, 185, 0.15));
+}
+/* Reaproveita exatamente as mesmas cores de marca já usadas nos cartões
+   de resultado (.brand--meli etc.) — o chip de entrada e o cartão de
+   saída falam a mesma língua visual. */
+.marketplace-chip--meli { --chip-accent: #3483FA; --chip-glow: rgba(52, 131, 250, 0.18); }
+.marketplace-chip--amazon { --chip-accent: #131921; --chip-glow: rgba(19, 25, 33, 0.14); }
+.marketplace-chip--shopee { --chip-accent: #EE4D2D; --chip-glow: rgba(238, 77, 45, 0.18); }
+.marketplace-chip--tiktok { --chip-accent: #FE2C55; --chip-glow: rgba(254, 44, 85, 0.18); }
+
+.marketplace-chip__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+.marketplace-chip__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--chip-accent);
+  flex-shrink: 0;
+}
+.marketplace-chip__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-1);
+}
+.marketplace-chip__status {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.marketplace-chip.is-active .marketplace-chip__status {
+  color: var(--chip-accent);
+}
+.marketplace-chip__chevron {
+  flex-shrink: 0;
+  color: var(--text-2);
+  transition: transform var(--transition-fast);
+}
+.marketplace-chip__head[aria-expanded="true"] .marketplace-chip__chevron {
+  transform: rotate(180deg);
+}
+.marketplace-chip__body {
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border-soft);
+  margin-top: 2px;
+  padding-top: var(--space-4);
+}
+.marketplace-chip__body .field:last-child { margin-bottom: 0; }
+
+/* ---- Accordion (usado no bloco de Frete) ---- */
+.accordion-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  background: var(--bg-4);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue-2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast);
+}
+.accordion-toggle:hover,
+.accordion-toggle[aria-expanded="true"] {
+  border-color: var(--border-strong);
+}
+.accordion-toggle__icon { flex-shrink: 0; }
+.accordion-toggle__chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text-2);
+  transition: transform var(--transition-fast);
+}
+.accordion-toggle[aria-expanded="true"] .accordion-toggle__chevron {
+  transform: rotate(180deg);
+}
+.accordion-body {
+  padding: var(--space-5) var(--space-1) 0;
+}
+
+/* ---- Tooltip de campo (substitui texto de ajuda longo por um "?") ----
+   O conteúdo continua sempre no DOM e associado via aria-describedby —
+   leitor de tela lê normalmente; só quem enxerga precisa clicar no "?"
+   pra ver (opacity/transform, nunca [hidden], pra não sumir da árvore de
+   acessibilidade). */
+.field__label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.field__label-row label { margin-bottom: 0; }
+.field-tooltip { position: relative; display: inline-flex; }
+.field-tooltip__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-4);
+  color: var(--text-2);
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.field-tooltip__btn:hover,
+.field-tooltip__btn[aria-expanded="true"] {
+  color: var(--white);
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.field-tooltip__bubble {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: min(280px, 76vw);
+  background: var(--bg-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-2);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+.field-tooltip__bubble.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ---- Prévia de preço ao vivo ----
+   Estimativa simples (custo × markup, sem taxas) que atualiza enquanto o
+   usuário digita — só um ponto de partida "vivo", não o resultado final
+   (que sai só depois de "Calcular preço", com taxas reais inclusas). */
+.live-preview {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--bg-4);
+  border: 1px dashed var(--border-strong);
+}
+.live-preview__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.live-preview__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--blue-2);
+}
+
 .results-empty {
   display: flex;
   flex-direction: column;

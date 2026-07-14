@@ -156,6 +156,9 @@
           </div>
         </fieldset>
 
+      </div>
+      <div class="calc-form-col">
+
         <fieldset class="field-group">
           <legend class="field-group__title">
             <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a1 1 0 0 1 1 1v1.06a7.5 7.5 0 0 1 6.44 6.44H20.5a1 1 0 1 1 0 2h-1.06a7.5 7.5 0 0 1-6.44 6.44V20a1 1 0 1 1-2 0v-1.06a7.5 7.5 0 0 1-6.44-6.44H3.5a1 1 0 1 1 0-2h1.06a7.5 7.5 0 0 1 6.44-6.44V3a1 1 0 0 1 1-1Zm0 5.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Zm0 2.5a1 1 0 0 1 1 1v1.59l1.7 1.7a1 1 0 0 1-1.42 1.42l-2-2A1 1 0 0 1 11 13v-2a1 1 0 0 1 1-1Z"/></svg>
@@ -163,7 +166,13 @@
           </legend>
 
           <div class="field">
-            <label for="markupPct">Markup desejado <span class="field__optional">(sobre o custo)</span></label>
+            <div class="field__label-row">
+              <label for="markupPct">Markup desejado <span class="field__optional">(sobre o custo)</span></label>
+              <span class="field-tooltip">
+                <button type="button" class="field-tooltip__btn" id="markupPct-tip-btn" aria-expanded="false" aria-controls="markupPct-help" aria-label="Mais informações sobre markup">?</button>
+                <span class="field-tooltip__bubble" id="markupPct-help" role="tooltip">Quanto de lucro você quer ganhar em cima do custo do produto. Ex.: markup de 30% sobre R$ 100 de custo = R$ 30 de lucro desejado. Não tem limite de 100%. O markup incide sobre custo do produto + custos adicionais. O frete pago pelo vendedor é somado ao preço final só para ser recuperado — não entra na base do markup.</span>
+              </span>
+            </div>
             <div class="input-wrap">
               <input
                 type="text"
@@ -176,13 +185,17 @@
               />
               <span class="input-affix input-affix--suffix" aria-hidden="true">%</span>
             </div>
-            <p class="field__help" id="markupPct-help">Quanto de lucro você quer ganhar em cima do custo do produto. Ex.: markup de 30% sobre R$ 100 de custo = R$ 30 de lucro desejado. Não tem limite de 100%.</p>
-            <p class="field__reference">O markup incide sobre custo do produto + custos adicionais. O frete pago pelo vendedor é somado ao preço final só para ser recuperado — não entra na base do markup.</p>
             <p class="field__error" id="markupPct-error" role="alert" hidden></p>
           </div>
 
           <div class="field">
-            <label for="marketingReservePct">Reserva para marketing <span class="field__optional">(opcional)</span></label>
+            <div class="field__label-row">
+              <label for="marketingReservePct">Reserva para marketing <span class="field__optional">(opcional)</span></label>
+              <span class="field-tooltip">
+                <button type="button" class="field-tooltip__btn" id="marketingReservePct-tip-btn" aria-expanded="false" aria-controls="marketingReservePct-help" aria-label="Mais informações sobre reserva para marketing">?</button>
+                <span class="field-tooltip__bubble" id="marketingReservePct-help" role="tooltip">Uma fatia a mais do preço final, separada do lucro, pra sobrar espaço pra cupom, campanha ou anúncio patrocinado sem consumir a margem combinada. Deixe em branco pra não usar. Sugestão comum: 10%.</span>
+              </span>
+            </div>
             <div class="input-wrap">
               <input
                 type="text"
@@ -195,68 +208,162 @@
               />
               <span class="input-affix input-affix--suffix" aria-hidden="true">%</span>
             </div>
-            <p class="field__help" id="marketingReservePct-help">Uma fatia a mais do preço final, separada do lucro, pra sobrar espaço pra cupom, campanha ou anúncio patrocinado sem consumir a margem combinada. Deixe em branco pra não usar. Sugestão comum: 10%.</p>
             <p class="field__error" id="marketingReservePct-error" role="alert" hidden></p>
           </div>
         </fieldset>
 
-        <fieldset class="field-group">
-          <legend class="field-group__title">
-            <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3ZM5 9.5l6 3.3v7.4l-6-3.3V9.5Zm14 0v7.4l-6 3.3v-7.4l6-3.3Z"/></svg>
-            Mercado Livre
-            <span class="field-group__badge">opcional</span>
-          </legend>
+      </div>
+      </div>
 
-          <div class="field" id="productQueryField" hidden>
-            <label for="productQuery">Produto cadastrado <span class="field__optional">(traz categoria e frete automaticamente)</span></label>
-            <div class="input-wrap">
-              <input
-                type="text"
-                id="productQuery"
-                name="productQuery"
-                autocomplete="off"
-                placeholder="Digite o nome do produto já anunciado..."
-                aria-describedby="productQuery-help"
-                aria-expanded="false"
-                aria-controls="productSuggestions"
-                role="combobox"
-              />
+      <div class="calc-block calc-block--marketplaces">
+        <p class="calc-block__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 6.5 12 11l9-4.5L12 2Zm-9 6.5v9L11 21v-8.9L3 8.5Zm18 0-8 3.6V21l8-3.5v-9Z"/></svg>
+          Comparar em quais marketplaces?
+        </p>
+        <div class="marketplace-picker">
+
+          <div class="marketplace-chip marketplace-chip--meli is-active" data-marketplace="meli">
+            <button type="button" class="marketplace-chip__head" id="meliChipToggle" aria-expanded="true" aria-controls="meliChipBody">
+              <span class="marketplace-chip__dot" aria-hidden="true"></span>
+              <span class="marketplace-chip__name">Mercado Livre</span>
+              <span class="marketplace-chip__status">Sempre comparado</span>
+              <svg class="marketplace-chip__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="marketplace-chip__body" id="meliChipBody">
+
+              <div class="field" id="productQueryField" hidden>
+                <div class="field__label-row">
+                  <label for="productQuery">Produto cadastrado</label>
+                  <span class="field-tooltip">
+                    <button type="button" class="field-tooltip__btn" id="productQuery-tip-btn" aria-expanded="false" aria-controls="productQuery-help" aria-label="Mais informações sobre produto cadastrado">?</button>
+                    <span class="field-tooltip__bubble" id="productQuery-help" role="tooltip">Busca nos seus produtos já anunciados no Mercado Livre — usa a categoria real do anúncio e, quando disponível, preenche o peso/dimensões do frete sozinho. Melhor buscar pelo nome do produto — a busca por SKU do próprio Mercado Livre é inconsistente (às vezes encontra, às vezes não), mas o campo também tenta pelo SKU exato como reforço.</span>
+                  </span>
+                </div>
+                <div class="input-wrap">
+                  <input
+                    type="text"
+                    id="productQuery"
+                    name="productQuery"
+                    autocomplete="off"
+                    placeholder="Digite o nome do produto já anunciado..."
+                    aria-describedby="productQuery-help"
+                    aria-expanded="false"
+                    aria-controls="productSuggestions"
+                    role="combobox"
+                  />
+                </div>
+                <ul class="category-suggestions" id="productSuggestions" role="listbox" hidden></ul>
+                <p class="category-selected" id="productSelected" hidden></p>
+              </div>
+
+              <div class="field">
+                <div class="field__label-row">
+                  <label for="categoryQuery">Categoria do produto <span class="field__optional">(traz a taxa real)</span></label>
+                  <span class="field-tooltip">
+                    <button type="button" class="field-tooltip__btn" id="categoryQuery-tip-btn" aria-expanded="false" aria-controls="categoryQuery-help" aria-label="Mais informações sobre categoria do produto">?</button>
+                    <span class="field-tooltip__bubble" id="categoryQuery-help" role="tooltip">Sem cadastro no Mercado Livre ainda? Digite o nome do produto aqui pra buscarmos a taxa REAL por categoria. Sem isso, usamos a taxa de referência (ver nota nos cartões).</span>
+                  </span>
+                </div>
+                <div class="input-wrap">
+                  <input
+                    type="text"
+                    id="categoryQuery"
+                    name="categoryQuery"
+                    autocomplete="off"
+                    placeholder="Ex: tênis esportivo, fone de ouvido..."
+                    aria-describedby="categoryQuery-help"
+                    aria-expanded="false"
+                    aria-controls="categorySuggestions"
+                    role="combobox"
+                  />
+                </div>
+                <ul class="category-suggestions" id="categorySuggestions" role="listbox" hidden></ul>
+                <p class="category-selected" id="categorySelected" hidden></p>
+              </div>
+
             </div>
-            <ul class="category-suggestions" id="productSuggestions" role="listbox" hidden></ul>
-            <p class="category-selected" id="productSelected" hidden></p>
-            <p class="field__help" id="productQuery-help">Busca nos seus produtos já anunciados no Mercado Livre — usa a categoria real do anúncio e, quando disponível, preenche o peso/dimensões do frete abaixo sozinho. Melhor buscar pelo nome do produto — a busca por SKU do próprio Mercado Livre é inconsistente (às vezes encontra, às vezes não), mas o campo também tenta pelo SKU exato como reforço.</p>
           </div>
 
-          <div class="field">
-            <label for="categoryQuery">Categoria do produto <span class="field__optional">(traz a taxa real)</span></label>
-            <div class="input-wrap">
-              <input
-                type="text"
-                id="categoryQuery"
-                name="categoryQuery"
-                autocomplete="off"
-                placeholder="Ex: tênis esportivo, fone de ouvido..."
-                aria-describedby="categoryQuery-help"
-                aria-expanded="false"
-                aria-controls="categorySuggestions"
-                role="combobox"
-              />
+          <div class="marketplace-chip marketplace-chip--amazon" data-marketplace="amazon">
+            <button type="button" class="marketplace-chip__head" id="amazonChipToggle" aria-expanded="false" aria-controls="amazonChipBody">
+              <span class="marketplace-chip__dot" aria-hidden="true"></span>
+              <span class="marketplace-chip__name">Amazon</span>
+              <span class="marketplace-chip__status" id="amazonChipStatus">Não incluído</span>
+              <svg class="marketplace-chip__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="marketplace-chip__body" id="amazonChipBody" hidden>
+              <div class="field">
+                <div class="field__label-row">
+                  <label for="amazonCategory">Categoria do produto</label>
+                  <span class="field-tooltip">
+                    <button type="button" class="field-tooltip__btn" id="amazonCategory-tip-btn" aria-expanded="false" aria-controls="amazonCategory-help" aria-label="Mais informações sobre a taxa da Amazon">?</button>
+                    <span class="field-tooltip__bubble" id="amazonCategory-help" role="tooltip">A Amazon não tem API pública de taxa por venda — o valor é de referência (cadastrado no painel admin), não uma consulta em tempo real como a do Mercado Livre.</span>
+                  </span>
+                </div>
+                <div class="input-wrap">
+                  <select id="amazonCategory" name="amazonCategory">
+                    <option value="">Não incluir a Amazon na comparação</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <ul class="category-suggestions" id="categorySuggestions" role="listbox" hidden></ul>
-            <p class="category-selected" id="categorySelected" hidden></p>
-            <p class="field__help" id="categoryQuery-help">Sem cadastro no Mercado Livre ainda? Digite o nome do produto aqui pra buscarmos a taxa REAL por categoria. Sem isso, usamos a taxa de referência (ver nota nos cartões).</p>
           </div>
-        </fieldset>
 
-        <fieldset class="field-group">
-          <legend class="field-group__title">
-            <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1.17a3 3 0 0 0 5.66 0h4.34a3 3 0 0 0 5.66 0H21a1 1 0 0 0 1-1v-4.5a1 1 0 0 0-.22-.62l-3-3.75A1 1 0 0 0 18 7h-2V5a1 1 0 0 0-1-1H3Zm14.5 8.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM7 12.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM16 9h1.5l2 2.5H16V9Z"/></svg>
-            Frete
-            <span class="field-group__badge">opcional</span>
-          </legend>
+          <div class="marketplace-chip marketplace-chip--shopee" data-marketplace="shopee">
+            <button type="button" class="marketplace-chip__head" id="shopeeChipToggle" aria-expanded="false" aria-controls="shopeeChipBody">
+              <span class="marketplace-chip__dot" aria-hidden="true"></span>
+              <span class="marketplace-chip__name">Shopee</span>
+              <span class="marketplace-chip__status" id="shopeeChipStatus">Não incluído</span>
+              <svg class="marketplace-chip__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="marketplace-chip__body" id="shopeeChipBody" hidden>
+              <div class="field field--checkbox">
+                <label class="field--checkbox__label" for="shopeeInclude">
+                  <input type="checkbox" id="shopeeInclude" name="shopeeInclude" />
+                  Incluir a Shopee na comparação
+                </label>
+                <p class="field__help">A comissão da Shopee não varia por categoria, só por faixa de preço — por isso não tem seletor de categoria aqui. Taxa de referência (tabela padrão, CNPJ ou CPF com até 450 pedidos/90 dias), cadastrada no painel admin.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="marketplace-chip marketplace-chip--tiktok" data-marketplace="tiktok">
+            <button type="button" class="marketplace-chip__head" id="tiktokChipToggle" aria-expanded="false" aria-controls="tiktokChipBody">
+              <span class="marketplace-chip__dot" aria-hidden="true"></span>
+              <span class="marketplace-chip__name">TikTok Shop</span>
+              <span class="marketplace-chip__status" id="tiktokChipStatus">Não incluído</span>
+              <svg class="marketplace-chip__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="marketplace-chip__body" id="tiktokChipBody" hidden>
+              <div class="field field--checkbox">
+                <label class="field--checkbox__label" for="tiktokInclude">
+                  <input type="checkbox" id="tiktokInclude" name="tiktokInclude" />
+                  Incluir o TikTok Shop na comparação
+                </label>
+                <p class="field__help">Igual à Shopee, a comissão do TikTok Shop não varia por categoria, só por faixa de preço. Taxa de referência (vigente a partir de 15/07/2026), cadastrada no painel admin.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="calc-block">
+        <button type="button" class="accordion-toggle" id="freightToggle" aria-expanded="false" aria-controls="freightBody">
+          <svg class="accordion-toggle__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1.17a3 3 0 0 0 5.66 0h4.34a3 3 0 0 0 5.66 0H21a1 1 0 0 0 1-1v-4.5a1 1 0 0 0-.22-.62l-3-3.75A1 1 0 0 0 18 7h-2V5a1 1 0 0 0-1-1H3Zm14.5 8.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM7 12.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM16 9h1.5l2 2.5H16V9Z"/></svg>
+          Frete <span class="field-group__badge">opcional</span>
+          <svg class="accordion-toggle__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="accordion-body" id="freightBody" hidden>
 
           <div class="field">
-            <label for="sellerShippingCost">Frete pago pelo vendedor</label>
+            <div class="field__label-row">
+              <label for="sellerShippingCost">Frete pago pelo vendedor</label>
+              <span class="field-tooltip">
+                <button type="button" class="field-tooltip__btn" id="sellerShippingCost-tip-btn" aria-expanded="false" aria-controls="sellerShippingCost-help" aria-label="Mais informações sobre frete pago pelo vendedor">?</button>
+                <span class="field-tooltip__bubble" id="sellerShippingCost-help" role="tooltip">Quanto você (vendedor) paga de frete quando oferece frete grátis ao comprador — não é o valor que o comprador vê. Se souber esse número, informe aqui; senão, preencha peso e dimensões abaixo para calcularmos automaticamente (exige conexão com o Mercado Livre).</span>
+              </span>
+            </div>
             <div class="input-wrap">
               <span class="input-affix input-affix--prefix" aria-hidden="true">R$</span>
               <input
@@ -269,7 +376,6 @@
                 aria-describedby="sellerShippingCost-help"
               />
             </div>
-            <p class="field__help" id="sellerShippingCost-help">Quanto você (vendedor) paga de frete quando oferece frete grátis ao comprador — não é o valor que o comprador vê. Se souber esse número, informe aqui; senão, preencha peso e dimensões abaixo para calcularmos automaticamente (exige conexão com o Mercado Livre).</p>
           </div>
 
           <div class="field">
@@ -290,7 +396,13 @@
           </div>
 
           <div class="field">
-            <label for="packageLength">Dimensões da embalagem <span class="field__optional">(cm — preencha os 3)</span></label>
+            <div class="field__label-row">
+              <label for="packageLength">Dimensões da embalagem <span class="field__optional">(cm — preencha os 3)</span></label>
+              <span class="field-tooltip">
+                <button type="button" class="field-tooltip__btn" id="dimensions-tip-btn" aria-expanded="false" aria-controls="dimensions-help" aria-label="Mais informações sobre dimensões da embalagem">?</button>
+                <span class="field-tooltip__bubble" id="dimensions-help" role="tooltip">Comprimento × largura × altura da embalagem, em cm. Preencha os 3 (junto com o peso acima) para calcular o frete real — exige a conta com Mercado Envios aceito.</span>
+              </span>
+            </div>
             <div class="dimensions-row">
               <div class="input-wrap">
                 <input type="text" id="packageLength" name="packageLength" inputmode="decimal" autocomplete="off" placeholder="Compr." aria-label="Comprimento em centímetros" aria-describedby="dimensions-help" />
@@ -304,65 +416,15 @@
                 <input type="text" id="packageHeight" name="packageHeight" inputmode="decimal" autocomplete="off" placeholder="Alt." aria-label="Altura em centímetros" aria-describedby="dimensions-help" />
               </div>
             </div>
-            <p class="field__help" id="dimensions-help">Comprimento × largura × altura da embalagem, em cm. Preencha os 3 (junto com o peso acima) para calcular o frete real — exige a conta com Mercado Envios aceito.</p>
           </div>
-        </fieldset>
 
+        </div>
       </div>
-      <div class="calc-form-col">
 
-        <fieldset class="field-group">
-          <legend class="field-group__title">
-            <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 6.5 12 11l9-4.5L12 2Zm-9 6.5v9L11 21v-8.9L3 8.5Zm18 0-8 3.6V21l8-3.5v-9Z"/></svg>
-            Amazon
-            <span class="field-group__badge">opcional</span>
-          </legend>
-
-          <div class="field">
-            <label for="amazonCategory">Categoria do produto <span class="field__optional">(taxa de referência)</span></label>
-            <div class="input-wrap">
-              <select id="amazonCategory" name="amazonCategory">
-                <option value="">Não incluir a Amazon na comparação</option>
-              </select>
-            </div>
-            <p class="field__help" id="amazonCategory-help">A Amazon não tem API pública de taxa por venda — o valor é de referência (cadastrado no painel admin), não uma consulta em tempo real como a do Mercado Livre.</p>
-          </div>
-        </fieldset>
-
-        <fieldset class="field-group">
-          <legend class="field-group__title">
-            <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 6.5 12 11l9-4.5L12 2Zm-9 6.5v9L11 21v-8.9L3 8.5Zm18 0-8 3.6V21l8-3.5v-9Z"/></svg>
-            Shopee
-            <span class="field-group__badge">opcional</span>
-          </legend>
-
-          <div class="field field--checkbox">
-            <label class="field--checkbox__label" for="shopeeInclude">
-              <input type="checkbox" id="shopeeInclude" name="shopeeInclude" />
-              Incluir a Shopee na comparação
-            </label>
-            <p class="field__help" id="shopeeInclude-help">A comissão da Shopee não varia por categoria, só por faixa de preço — por isso não tem seletor de categoria aqui. Taxa de referência (tabela padrão, CNPJ ou CPF com até 450 pedidos/90 dias), cadastrada no painel admin.</p>
-          </div>
-        </fieldset>
-
-        <fieldset class="field-group">
-          <legend class="field-group__title">
-            <svg class="field-group__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 3 6.5 12 11l9-4.5L12 2Zm-9 6.5v9L11 21v-8.9L3 8.5Zm18 0-8 3.6V21l8-3.5v-9Z"/></svg>
-            TikTok Shop
-            <span class="field-group__badge">opcional</span>
-          </legend>
-
-          <div class="field field--checkbox">
-            <label class="field--checkbox__label" for="tiktokInclude">
-              <input type="checkbox" id="tiktokInclude" name="tiktokInclude" />
-              Incluir o TikTok Shop na comparação
-            </label>
-            <p class="field__help" id="tiktokInclude-help">Igual à Shopee, a comissão do TikTok Shop não varia por categoria, só por faixa de preço. Taxa de referência (vigente a partir de 15/07/2026), cadastrada no painel admin.</p>
-          </div>
-        </fieldset>
-
-      </div>
-      </div>
+        <div class="live-preview" id="livePreview" hidden>
+          <span class="live-preview__label">Estimativa rápida</span>
+          <strong class="live-preview__value" id="livePreviewValue">R$ 0,00</strong>
+        </div>
 
         <div class="form-actions">
           <button type="submit" class="btn btn--primary">Calcular preço</button>
@@ -447,5 +509,6 @@
 <script src="background-fx.js"></script>
 <script src="marketplace-fees.js"></script>
 <script src="script.js"></script>
+<script src="calc-form-ui.js"></script>
 </body>
 </html>
