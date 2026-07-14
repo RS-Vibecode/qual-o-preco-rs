@@ -113,17 +113,35 @@ async function handleProductMode(req, res, q) {
       return;
     }
 
-    const searchUrl = new URL(`https://api.mercadolibre.com/users/${me.id}/items/search`);
-    searchUrl.searchParams.set("q", q);
-    searchUrl.searchParams.set("limit", "8");
-    const searchResp = await fetch(searchUrl.toString(), { headers: { Authorization: `Bearer ${accessToken}` } });
-    const searchData = await searchResp.json();
-    if (!searchResp.ok) {
-      res.status(searchResp.status).json({ error: "Mercado Livre recusou a busca de produtos.", details: searchData });
+    // Duas buscas em paralelo: por texto (q=, encontra por nome de forma
+    // confiável) e por SKU exato (seller_sku=). A busca por SKU do próprio
+    // Mercado Livre é inconsistente — testado com 9 SKUs reais desta
+    // conta, só 3 foram encontrados por ela (os "compostos", tipo
+    // STMT80218-840; SKUs mais simples, tipo KRI-20, não, mesmo buscando
+    // pelo valor exato). Fazer as duas buscas juntas cobre mais casos do
+    // que só uma, mas não garante 100% pra SKU — isso é uma limitação da
+    // busca do próprio ML, não tem como forçar do nosso lado.
+    const textSearchUrl = new URL(`https://api.mercadolibre.com/users/${me.id}/items/search`);
+    textSearchUrl.searchParams.set("q", q);
+    textSearchUrl.searchParams.set("limit", "8");
+
+    const skuSearchUrl = new URL(`https://api.mercadolibre.com/users/${me.id}/items/search`);
+    skuSearchUrl.searchParams.set("seller_sku", q);
+
+    const [textSearchResp, skuSearchResp] = await Promise.all([
+      fetch(textSearchUrl.toString(), { headers: { Authorization: `Bearer ${accessToken}` } }),
+      fetch(skuSearchUrl.toString(), { headers: { Authorization: `Bearer ${accessToken}` } }),
+    ]);
+    const textSearchData = await textSearchResp.json();
+    const skuSearchData = skuSearchResp.ok ? await skuSearchResp.json() : { results: [] };
+    if (!textSearchResp.ok) {
+      res.status(textSearchResp.status).json({ error: "Mercado Livre recusou a busca de produtos.", details: textSearchData });
       return;
     }
 
-    const ids = Array.isArray(searchData.results) ? searchData.results : [];
+    const textIds = Array.isArray(textSearchData.results) ? textSearchData.results : [];
+    const skuIds = Array.isArray(skuSearchData.results) ? skuSearchData.results : [];
+    const ids = [...new Set([...skuIds, ...textIds])].slice(0, 8); // achado pelo SKU exato aparece primeiro
     if (!ids.length) {
       res.status(200).json({ results: [] });
       return;
