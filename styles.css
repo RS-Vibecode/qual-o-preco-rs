@@ -384,14 +384,31 @@ body::after {
   width: auto;
 }
 
-/* ===== Chip de usuário logado (cabeçalho) ===== */
+/* ===== Chip de usuário logado (cabeçalho) =====
+   Antes eram 4-5 botões separados sempre visíveis (Meu perfil,
+   Configurações, Painel admin, Sair...), competindo em peso visual com o
+   resto do cabeçalho. Agora é um único gatilho (avatar + nome) que abre
+   um menu — o mesmo padrão de "clique pra revelar" já usado nos chips de
+   marketplace e no accordion de frete/nova categoria. */
 .user-chip {
+  position: relative;
+}
+.user-chip__trigger {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  flex-wrap: wrap;
-  row-gap: var(--space-2);
-  justify-content: flex-end;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  cursor: pointer;
+  font: inherit;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.user-chip__trigger:hover,
+.user-chip__trigger[aria-expanded="true"] {
+  background: var(--bg-4);
+  border-color: var(--border-soft);
 }
 @media (max-width: 480px) {
   .user-chip__info { display: none; }
@@ -422,7 +439,7 @@ body::after {
 .user-chip__info {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   line-height: 1.25;
 }
 .user-chip__name {
@@ -436,36 +453,62 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.user-chip__admin-link {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--blue-2);
-  text-decoration: none;
-  padding: 0.45rem 0.8rem;
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
-}
-.user-chip__admin-link:hover {
-  background: rgba(40, 128, 185, 0.1);
-  border-color: var(--blue-2);
-}
-.user-chip__logout {
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
+.user-chip__chevron {
   color: var(--text-2);
-  background: transparent;
-  border: 1.5px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-  padding: 0.45rem 0.8rem;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
 }
-.user-chip__logout:hover {
-  background: rgba(248, 113, 113, 0.1);
-  border-color: var(--color-error-border);
+.user-chip__trigger[aria-expanded="true"] .user-chip__chevron {
+  transform: rotate(180deg);
+}
+
+.user-chip__menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-2);
+}
+.user-chip__menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-1);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+.user-chip__menu-item:hover {
+  background: var(--bg-4);
+}
+.user-chip__menu-divider {
+  height: 1px;
+  margin: var(--space-1) 0.25rem;
+  border: none;
+  background: var(--border-soft);
+}
+.user-chip__menu-item--danger {
   color: var(--color-error);
+}
+.user-chip__menu-item--danger:hover {
+  background: var(--color-error-bg);
 }
 
 /* Esconde o conteúdo principal até auth-guard.js confirmar a sessão —
@@ -764,7 +807,12 @@ body.auth-pending main {
   border: 1.5px solid var(--border-soft);
   border-radius: var(--radius-md);
   background: var(--bg-4);
-  overflow: hidden;
+  /* Sem overflow:visible aqui, o tooltip de campo (position:absolute)
+     dentro do corpo do chip era cortado exatamente na borda do cartão —
+     overflow:hidden bloqueia QUALQUER descendente que escape da caixa,
+     não só o conteúdo normal (não tinha cantos quadrados vazando pra
+     esconder; a regra só existia por precaução). */
+  overflow: visible;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .marketplace-chip.is-active {
@@ -924,7 +972,7 @@ body.auth-pending main {
 }
 .field-tooltip__bubble {
   position: absolute;
-  z-index: 5;
+  z-index: 50;
   top: calc(100% + var(--space-2));
   left: 0;
   width: min(280px, 76vw);
@@ -941,6 +989,13 @@ body.auth-pending main {
   transform: translateY(-4px);
   pointer-events: none;
   transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+/* Aplicada via JS (calc-form-ui.js) quando o balão abriria vazando pra
+   fora da tela pela direita — alinha pela direita do botão "?" em vez da
+   esquerda. */
+.field-tooltip__bubble.align-right {
+  left: auto;
+  right: 0;
 }
 .field-tooltip__bubble.is-open {
   opacity: 1;

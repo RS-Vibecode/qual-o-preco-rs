@@ -80,7 +80,7 @@ function closeAllTooltips(except) {
   tooltipButtons.forEach((btn) => {
     if (btn === except) return;
     btn.setAttribute("aria-expanded", "false");
-    document.getElementById(btn.getAttribute("aria-controls"))?.classList.remove("is-open");
+    document.getElementById(btn.getAttribute("aria-controls"))?.classList.remove("is-open", "align-right");
   });
 }
 
@@ -93,6 +93,18 @@ tooltipButtons.forEach((btn) => {
     closeAllTooltips(btn);
     btn.setAttribute("aria-expanded", String(!isOpen));
     bubble.classList.toggle("is-open", !isOpen);
+
+    if (!isOpen) {
+      // Alinhado à esquerda por padrão — só troca pra direita se isso
+      // vazaria pra fora da tela (o balão tem largura própria e sempre
+      // está no layout, mesmo fechado/opacity:0, então dá pra medir
+      // antes de decidir).
+      bubble.classList.remove("align-right");
+      const rect = bubble.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) {
+        bubble.classList.add("align-right");
+      }
+    }
   });
 });
 

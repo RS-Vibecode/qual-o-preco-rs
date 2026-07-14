@@ -84,6 +84,35 @@
     }
   });
 
+  // Menu do chip de usuário — clique no gatilho abre/fecha; clique fora
+  // ou Esc fecha (mesmo padrão já usado nos tooltips da calculadora).
+  const userChipTrigger = document.getElementById("userChipTrigger");
+  const userChipMenu = document.getElementById("userChipMenu");
+
+  function closeUserChipMenu() {
+    if (!userChipTrigger || !userChipMenu) return;
+    userChipTrigger.setAttribute("aria-expanded", "false");
+    userChipMenu.hidden = true;
+  }
+
+  userChipTrigger?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const expanded = userChipTrigger.getAttribute("aria-expanded") === "true";
+    userChipTrigger.setAttribute("aria-expanded", String(!expanded));
+    userChipMenu.hidden = expanded;
+  });
+  document.addEventListener("click", (event) => {
+    if (userChipMenu && !userChipMenu.hidden && !userChipMenu.contains(event.target)) {
+      closeUserChipMenu();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && userChipMenu && !userChipMenu.hidden) {
+      closeUserChipMenu();
+      userChipTrigger.focus();
+    }
+  });
+
   // bfcache: o navegador às vezes restaura a página (ex.: botão "voltar")
   // sem rodar este script de novo — força recarregar pra reconferir a
   // sessão (ex.: usuário tinha acabado de deslogar).
