@@ -216,6 +216,29 @@
             </div>
             <p class="field__error" id="marketingReservePct-error" role="alert" hidden></p>
           </div>
+
+          <div class="field">
+            <div class="field__label-row">
+              <label for="taxPct">Imposto <span class="field__optional">(opcional)</span></label>
+              <span class="field-tooltip">
+                <button type="button" class="field-tooltip__btn" id="taxPct-tip-btn" aria-expanded="false" aria-controls="taxPct-help" aria-label="Mais informações sobre imposto">?</button>
+                <span class="field-tooltip__bubble" id="taxPct-help" role="tooltip">Preenchimento manual — a ferramenta não sabe o seu regime tributário. Informe o % que você paga de imposto sobre a venda (ex.: alíquota do Simples Nacional) e ele entra no preço da mesma forma que a comissão do marketplace, sem consumir o lucro combinado. Deixe em branco pra não usar.</span>
+              </span>
+            </div>
+            <div class="input-wrap">
+              <input
+                type="text"
+                id="taxPct"
+                name="taxPct"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="Ex: 6"
+                aria-describedby="taxPct-help taxPct-error"
+              />
+              <span class="input-affix input-affix--suffix" aria-hidden="true">%</span>
+            </div>
+            <p class="field__error" id="taxPct-error" role="alert" hidden></p>
+          </div>
         </fieldset>
 
       </div>

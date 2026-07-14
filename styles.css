@@ -2134,6 +2134,7 @@ dialog.card-modal::backdrop {
 .compare-card__breakdown-segment--fees { background: rgba(11, 22, 40, 0.34); }
 .compare-card__breakdown-segment--shipping { background: rgba(11, 22, 40, 0.16); }
 .compare-card__breakdown-segment--marketing { background: #E8A020; }
+.compare-card__breakdown-segment--tax { background: #7B8EC7; }
 .compare-card__breakdown-segment--profit { background: #1f9d5c; }
 
 .compare-card__legend {
@@ -2161,7 +2162,44 @@ dialog.card-modal::backdrop {
 .compare-card__legend i.fees { background: rgba(11, 22, 40, 0.34); }
 .compare-card__legend i.shipping { background: rgba(11, 22, 40, 0.16); }
 .compare-card__legend i.marketing { background: #E8A020; }
+.compare-card__legend i.tax { background: #7B8EC7; }
 .compare-card__legend i.profit { background: #1f9d5c; }
+
+/* Selo de lucro total, destacado — ver buildProfitCallout em script.js.
+   Cores fixas (não var(--token) de tema), igual ao resto do cartão de
+   resultado: o cartão é sempre fundo branco, independente do tema
+   claro/escuro do site (identidade da marca do marketplace). */
+.compare-card__profit-callout {
+  text-align: center;
+  background: rgba(31, 157, 92, 0.08);
+  border: 1px solid rgba(31, 157, 92, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.compare-card__profit-callout-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #55547E;
+  margin-bottom: 2px;
+}
+.compare-card__profit-callout-value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.9rem;
+  color: #0b5c30;
+  line-height: 1.2;
+}
+.compare-card__profit-callout-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: #55547E;
+  margin-top: 3px;
+}
 
 .compare-card__details {
   position: relative;
@@ -2190,11 +2228,6 @@ dialog.card-modal::backdrop {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.compare-card__details dd.compare-card__dd--highlight {
-  color: #0b5c30;
-  font-size: 1.05rem;
-}
-
 .compare-card__caption {
   position: relative;
   margin-top: var(--space-3);

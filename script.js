@@ -73,33 +73,38 @@ function formatPercent(value) {
    --------------------------------------------------------- */
 
 /**
- * Reserva para marketing (opcional, `marketingReservePct`) — pra cobrir
- * cupom/campanha/anúncio sem consumir o lucro combinado. Matematicamente
- * é tratada igual a mais uma "comissão" percentual do marketplace: entra
- * no mesmo denominador que a taxa percentual (1 - TP - RP), então o
- * preço sobe o suficiente pra reservar exatamente esse % em cima do
- * preço final, sem tirar nada do lucro — o `netProfit` continua sendo
- * sempre `custoBase × markup`, com ou sem reserva (dá pra provar
- * algebricamente: substituindo suggestedPrice na fórmula de netProfit,
- * os termos com RP se cancelam). Por isso ela é resolvida no mesmo
- * lugar que a comissão do marketplace, não como parte do markup.
+ * Reserva para marketing (opcional, `marketingReservePct`) e imposto
+ * (opcional, `taxPct`, digitado manualmente pelo vendedor — a ferramenta
+ * não sabe o regime tributário de ninguém) — pra cobrir cupom/campanha/
+ * anúncio ou o imposto devido sem consumir o lucro combinado.
+ * Matematicamente as duas são tratadas igual a mais uma "comissão"
+ * percentual do marketplace: entram no mesmo denominador que a taxa
+ * percentual (1 - TP - RP - XP), então o preço sobe o suficiente pra
+ * cobrir exatamente esses % em cima do preço final, sem tirar nada do
+ * lucro — o `netProfit` continua sendo sempre `custoBase × markup`, com
+ * ou sem reserva/imposto (dá pra provar algebricamente: substituindo
+ * suggestedPrice na fórmula de netProfit, os termos com RP/XP se
+ * cancelam). Por isso são resolvidas no mesmo lugar que a comissão do
+ * marketplace, não como parte do markup.
  */
-function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, markupPct, shippingCost = 0, marketingReservePct = 0 }) {
+function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, markupPct, shippingCost = 0, marketingReservePct = 0, taxPct = 0 }) {
   const tp = marketplacePct / 100;
   const mk = markupPct / 100;
   const rp = marketingReservePct / 100;
+  const xp = taxPct / 100;
 
   const costBase = productCost + extraCosts;
-  const suggestedPrice = (costBase * (1 + mk) + fixedFee + shippingCost) / (1 - tp - rp);
-  const minPrice = (costBase + fixedFee + shippingCost) / (1 - tp - rp);
+  const suggestedPrice = (costBase * (1 + mk) + fixedFee + shippingCost) / (1 - tp - rp - xp);
+  const minPrice = (costBase + fixedFee + shippingCost) / (1 - tp - rp - xp);
 
   const commissionValue = suggestedPrice * tp; // comissão percentual, em reais
   const marketingReserveValue = suggestedPrice * rp; // reserva de marketing, em reais
-  const totalMlFees = commissionValue + fixedFee; // só as taxas do ML (sem frete, sem a reserva)
-  const totalCosts = costBase + shippingCost + totalMlFees + marketingReserveValue;
+  const taxValue = suggestedPrice * xp; // imposto, em reais
+  const totalMlFees = commissionValue + fixedFee; // só as taxas do ML (sem frete, sem reserva/imposto)
+  const totalCosts = costBase + shippingCost + totalMlFees + marketingReserveValue + taxValue;
   const netProfit = suggestedPrice - totalCosts;
-  const profitOverCostPct = costBase > 0 ? (netProfit / costBase) * 100 : 0; // lucro sobre o custo
-  const netMarginPct = suggestedPrice > 0 ? (netProfit / suggestedPrice) * 100 : 0; // margem líquida
+  const profitOverCostPct = costBase > 0 ? (netProfit / costBase) * 100 : 0; // lucro sobre o custo (= markup)
+  const netMarginPct = suggestedPrice > 0 ? (netProfit / suggestedPrice) * 100 : 0; // margem líquida (lucro sobre o preço de venda)
 
   return {
     totalCost: costBase,
@@ -111,6 +116,8 @@ function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, m
     shippingCostValue: shippingCost,
     marketingReservePct,
     marketingReserveValue,
+    taxPct,
+    taxValue,
     totalMlFees,
     totalCosts,
     netProfit,
@@ -157,6 +164,7 @@ const fieldConfig = [
   { id: "extraCosts", required: false, allowEmptyAsZero: true, label: "Custos adicionais" },
   { id: "markupPct", required: true, allowEmptyAsZero: false, label: "Markup desejado" },
   { id: "marketingReservePct", required: false, allowEmptyAsZero: true, label: "Reserva para marketing", max: 50 },
+  { id: "taxPct", required: false, allowEmptyAsZero: true, label: "Imposto", max: 50 },
 ];
 
 function getFieldEls(id) {
@@ -251,13 +259,12 @@ function animateCountUp(el, toValue, formatFn, duration = 700, delay = 0) {
   }, delay);
 }
 
-function detailRow(labelText, valueText, { highlight = false } = {}) {
+function detailRow(labelText, valueText) {
   const row = document.createElement("div");
   const dt = document.createElement("dt");
   dt.textContent = labelText;
   const dd = document.createElement("dd");
   dd.textContent = valueText;
-  if (highlight) dd.classList.add("compare-card__dd--highlight");
   row.append(dt, dd);
   return row;
 }
@@ -276,6 +283,9 @@ function buildBreakdownBar(r) {
   ];
   if (r.marketingReserveValue > 0) {
     segments.push({ className: "marketing", label: "Reserva mkt.", value: r.marketingReserveValue });
+  }
+  if (r.taxValue > 0) {
+    segments.push({ className: "tax", label: "Imposto", value: r.taxValue });
   }
   segments.push({ className: "profit", label: "Lucro", value: r.netProfit });
 
@@ -528,6 +538,36 @@ function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, include
   return frag;
 }
 
+/**
+ * Selo destacado com o lucro líquido TOTAL (em reais) e as duas leituras
+ * percentuais lado a lado, já rotuladas de forma inequívoca — "sobre o
+ * custo" e "sobre o preço de venda" — porque "lucro sobre custo" e
+ * "margem líquida" (os mesmos dois números) confundiam: pareciam a
+ * mesma coisa, mas são bases de cálculo diferentes (lucro÷custo vs.
+ * lucro÷preço final), por isso o valor em % é sempre diferente.
+ */
+function buildProfitCallout(r) {
+  const box = document.createElement("div");
+  box.className = "compare-card__profit-callout";
+
+  const label = document.createElement("span");
+  label.className = "compare-card__profit-callout-label";
+  label.textContent = "Lucro líquido total";
+  box.appendChild(label);
+
+  const value = document.createElement("strong");
+  value.className = "compare-card__profit-callout-value";
+  value.textContent = formatBRL(r.netProfit);
+  box.appendChild(value);
+
+  const sub = document.createElement("span");
+  sub.className = "compare-card__profit-callout-sub";
+  sub.textContent = `${formatPercent(r.profitOverCostPct)} sobre o custo · ${formatPercent(r.netMarginPct)} sobre o preço de venda`;
+  box.appendChild(sub);
+
+  return box;
+}
+
 /** Cartão completo (barra proporcional, legenda, grade de detalhes e
  * observação) — usado dentro do popup, construído sob demanda no clique
  * (ver openCardModal) em vez de ficar sempre no DOM da grade. */
@@ -548,14 +588,14 @@ function buildFullCard(entry, r, meta) {
   if (r.marketingReserveValue > 0) {
     details.append(detailRow("Reserva p/ marketing", `${formatPercent(r.marketingReservePct)} · ${formatBRL(r.marketingReserveValue)}`));
   }
+  if (r.taxValue > 0) {
+    details.append(detailRow("Imposto", `${formatPercent(r.taxPct)} · ${formatBRL(r.taxValue)}`));
+  }
   details.append(
     detailRow("Total de taxas", formatBRL(r.totalMlFees)),
-    detailRow("Total de custos", formatBRL(r.totalCosts)),
-    detailRow("Lucro líquido", formatBRL(r.netProfit), { highlight: true }),
-    detailRow("Lucro sobre custo", formatPercent(r.profitOverCostPct)),
-    detailRow("Margem líquida", formatPercent(r.netMarginPct))
+    detailRow("Total de custos", formatBRL(r.totalCosts))
   );
-  card.append(bar, legend, details);
+  card.append(bar, legend, buildProfitCallout(r), details);
 
   if (entry.captionNote) {
     const caption = document.createElement("p");
