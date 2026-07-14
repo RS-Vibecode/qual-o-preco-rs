@@ -1,8 +1,8 @@
 # Status do projeto — onde paramos
 
-Última atualização: 14/07/2026 (repaginação visual completa em andamento — Fase A concluída:
-formulário da calculadora com chips de marketplace, accordion de frete, tooltips e prévia de
-preço ao vivo; cartões do Mercado Livre e correção de selo/número sobrepostos publicados junto).
+Última atualização: 14/07/2026 (repaginação visual completa em andamento — Fases A e B
+concluídas: formulário da calculadora com chips de marketplace/accordion/tooltips/prévia ao
+vivo, e painel admin com tabela de taxas compacta, busca e accordion de nova categoria).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -624,35 +624,52 @@ em 3 fases (documentado, aprovado antes de começar a codar). Nesta sessão:
   - Resultado prático: o formulário ficou bem mais curto (cabe quase todo acima da dobra numa
     tela comum), testado em claro/escuro/mobile.
 
+### 23. Repaginação visual completa — Fase B: painel admin (14/07/2026)
+
+Segunda fase do plano de repaginação (ver seção 22). A tabela "Taxas de marketplace" tinha 39
+categorias da Amazon já cadastradas, cada linha com ~102px de altura (botões Editar/Remover
+empilhados em coluna cheia) — a tabela sozinha passava de 4.900px de altura.
+
+- Botões viraram **ícones compactos lado a lado** (lápis/lixeira, `admin-table__icon-btn`) —
+  linha caiu pra ~58px (medido: 2258px ÷ 39 linhas), quase metade. Aplicado só na tabela de
+  taxas (a de usuários tem poucas linhas normalmente e os botões têm texto de carregamento
+  dinâmico — "Removendo...", "Redefinindo..." — que não valia a pena redesenhar agora); a de
+  usuários ganhou só o layout lado a lado em vez de empilhado.
+- **Busca client-side** (`#usersSearch`, `#ratesSearch`) acima de cada tabela — filtra o array
+  já carregado, sem chamada nova de API.
+- Formulário "Nova categoria" virou **accordion fechado por padrão** (`#rateFormToggle`) — abre
+  sozinho ao clicar em "Editar" numa linha da tabela.
+- **Cabeçalho de estatística** novo no topo do painel: nº de clientes, nº de admins, nº de
+  categorias cadastradas (no marketplace selecionado no momento).
+- Testado local (Playwright): stats populam, busca filtra e limpa corretamente nas duas
+  tabelas, accordion abre/fecha e auto-expande ao editar, ícones com `aria-label` descritivo,
+  tema escuro conferido. Publicado em produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
 deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, a área de
 Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a busca de
-produtos cadastrados, a reserva de marketing e a Fase A da repaginação (formulário da
-calculadora) — tudo testado, publicado em produção. Falta:
+produtos cadastrados, a reserva de marketing e as Fases A e B da repaginação (formulário da
+calculadora e painel admin) — tudo testado, publicado em produção. Falta:
 
-1. **Fase B da repaginação (painel admin)** — próximo passo imediato: tabela de taxas
-   compacta (hoje 39 categorias da Amazon renderizam ~4.900px porque os botões
-   Editar/Remover são empilhados em coluna cheia — vira ícones lado a lado), busca/filtro
-   client-side nas tabelas, formulário "Nova categoria" vira accordion fechado por padrão,
-   cabeçalho de estatística leve no topo.
-2. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
-   perfil já estão bons, não deve precisar de reestruturação.
-3. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
+1. **Fase C da repaginação** — próximo passo imediato: polimento geral
+   (login/perfil/popups/componentes); login e perfil já estão bons, não deve precisar de
+   reestruturação, só ajustes finos de consistência.
+2. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
    `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
    categoria, por faixa de preço, com/sem tarifa fixa).
-4. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+3. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-5. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-6. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-8. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   a reserva de marketing, nem a repaginação visual (seções 19-22) — vale atualizar numa
+7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
+   a reserva de marketing, nem a repaginação visual (seções 19-23) — vale atualizar numa
    próxima passada de documentação.
