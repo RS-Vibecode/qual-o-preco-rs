@@ -1698,6 +1698,11 @@ dialog.card-modal::backdrop {
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
+  /* O padding do cartão (var(--space-6) = 32px) é menor que o quanto o
+     círculo de posição avança da borda (right: var(--space-5) + 30px de
+     largura = 54px) — sem essa reserva, texto de selo mais longo passa
+     por baixo do círculo. */
+  padding-right: calc(var(--space-5) + var(--space-2));
 }
 .compare-card__badge {
   position: relative;
