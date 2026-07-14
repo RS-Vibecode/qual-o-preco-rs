@@ -1,8 +1,8 @@
 # Status do projeto — onde paramos
 
-Última atualização: 14/07/2026 (senha escolhida na criação de usuário, painel reorganizado,
-logo clicável, busca de produtos já cadastrados no Mercado Livre — traz categoria real e frete
-automático quando disponível — e reserva de % opcional para marketing).
+Última atualização: 14/07/2026 (repaginação visual completa em andamento — Fase A concluída:
+formulário da calculadora com chips de marketplace, accordion de frete, tooltips e prévia de
+preço ao vivo; cartões do Mercado Livre e correção de selo/número sobrepostos publicados junto).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -593,30 +593,66 @@ placeholder, limite de 50% (acima disso, somado à comissão do marketplace, a f
 - Testado em produção: validação de limite (60% bloqueado), lucro idêntico com/sem reserva,
   linha de detalhe e fatia da barra aparecendo só quando > 0%.
 
+### 22. Repaginação visual completa — Fase A: formulário da calculadora (14/07/2026)
+
+Pedido novo do cliente depois de conversar com a diretora de e-commerce: a ferramenta
+"funciona mas é confusa e relativamente feia" — pediu repaginação de tudo, "do login ao
+último detalhe", com liberdade criativa total, mantendo a identidade da RS. Plano de execução
+em 3 fases (documentado, aprovado antes de começar a codar). Nesta sessão:
+
+- **Correções pontuais primeiro** (base pra tudo o resto): cartões do Mercado Livre usavam
+  fundo amarelo sólido, diferente do padrão "fundo branco + cor de marca como acento" já usado
+  em Amazon/Shopee/TikTok Shop — corrigido pra ficar consistente (azul `#3483FA` + amarelo
+  `#FFE600` do ML como acento, não mais preenchimento). Também corrigido um bug onde o número
+  de posição (círculo no canto) sobrepunha o texto de selos mais longos no popup — o padding do
+  cartão era mais estreito que o espaço que o círculo ocupa a partir da borda.
+- **Fase A — formulário**: os 7 `<fieldset>` soltos (Produto, Margem, Mercado Livre, Frete,
+  Amazon, Shopee, TikTok Shop), todos com o mesmo peso visual e texto de ajuda sempre visível,
+  viraram 3 blocos com hierarquia clara:
+  1. Produto & Margem — essencial, sempre visível.
+  2. **Seletor de chips de marketplace** — um cartão pequeno clicável por marketplace,
+     reaproveitando as mesmas cores de marca dos cartões de resultado. Mercado Livre vem
+     sempre expandido (é o principal); Amazon/Shopee/TikTok Shop começam fechados e mostram
+     "Incluído"/"Não incluído" dinamicamente.
+  3. Frete — accordion fechado por padrão.
+  - Textos de ajuda longos viraram tooltip em "?" (o conteúdo continua sempre no DOM via
+    `aria-describedby`, só o visual abre/fecha — leitor de tela não perde a descrição).
+  - **Prévia de preço ao vivo**: estimativa simples (custo × markup, sem taxas) atualiza
+    enquanto o usuário digita, antes mesmo de calcular.
+  - Toda a interação nova mora em `calc-form-ui.js` (carregado depois de `script.js`) — não
+    mexe em nenhuma lógica de cálculo/validação, só reembrulha os mesmos ids que já existiam.
+  - Resultado prático: o formulário ficou bem mais curto (cabe quase todo acima da dobra numa
+    tela comum), testado em claro/escuro/mobile.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
-deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, o layout
-novo (2 colunas + popup), a área de Configurações, o popup de ML desconectado, senha escolhida
-na criação de usuário, a busca de produtos cadastrados e a reserva de marketing — tudo testado,
-publicado em produção. Falta:
+deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, a área de
+Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a busca de
+produtos cadastrados, a reserva de marketing e a Fase A da repaginação (formulário da
+calculadora) — tudo testado, publicado em produção. Falta:
 
-1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
+1. **Fase B da repaginação (painel admin)** — próximo passo imediato: tabela de taxas
+   compacta (hoje 39 categorias da Amazon renderizam ~4.900px porque os botões
+   Editar/Remover são empilhados em coluna cheia — vira ícones lado a lado), busca/filtro
+   client-side nas tabelas, formulário "Nova categoria" vira accordion fechado por padrão,
+   cabeçalho de estatística leve no topo.
+2. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
+   perfil já estão bons, não deve precisar de reestruturação.
+3. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
    `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
    categoria, por faixa de preço, com/sem tarifa fixa).
-2. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+4. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+5. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-4. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+6. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-5. **`vercel dev` local ficou fora do ar** durante a sessão de 14/07 (não só lento — parou de
-   responder de vez) — precisa reiniciar antes da próxima rodada de testes locais.
-6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   nem a reserva de marketing (seções 19-21) — vale atualizar numa próxima passada de
-   documentação.
+8. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
+   a reserva de marketing, nem a repaginação visual (seções 19-22) — vale atualizar numa
+   próxima passada de documentação.
