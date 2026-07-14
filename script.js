@@ -466,21 +466,34 @@ function buildCardTop({ entry, r, rank, isBest, tiedCount, animateDelay, include
     frag.appendChild(rankBadge);
   }
 
-  if (isBest) {
+  // Os dois selos (menor preço / taxa real) podem aparecer juntos no
+  // popup — sem um contêiner próprio com espaçamento, ficavam colados um
+  // no outro (sem gap nenhum entre as duas pílulas). Só cria o contêiner
+  // quando pelo menos um dos dois vai aparecer.
+  const hasBestBadge = isBest;
+  const hasRealBadge = includeRealBadge && entry.isRealFee;
+  let badgesRow = null;
+  if (hasBestBadge || hasRealBadge) {
+    badgesRow = document.createElement("div");
+    badgesRow.className = "compare-card__badges";
+    frag.appendChild(badgesRow);
+  }
+
+  if (hasBestBadge) {
     const tied = tiedCount > 1;
     const badge = document.createElement("p");
     badge.className = "compare-card__badge";
     badge.textContent = compact
       ? (tied ? "Empate" : "Menor preço")
       : (tied ? "Valores empatados" : "Menor preço ao cliente");
-    frag.appendChild(badge);
+    badgesRow.appendChild(badge);
   }
 
-  if (includeRealBadge && entry.isRealFee) {
+  if (hasRealBadge) {
     const realBadge = document.createElement("p");
     realBadge.className = "compare-card__real-badge";
     realBadge.textContent = "Taxa real consultada agora";
-    frag.appendChild(realBadge);
+    badgesRow.appendChild(realBadge);
   }
 
   const name = document.createElement("p");

@@ -1645,6 +1645,16 @@ dialog.card-modal::backdrop {
   font-weight: 800;
   font-size: 0.85rem;
 }
+/* Linha dos selos (menor preço / taxa real) — os dois podem aparecer
+   juntos no popup (ver buildCardTop em script.js); sem esse contêiner
+   com gap e quebra de linha, ficavam colados um no outro. */
+.compare-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
 .compare-card__badge {
   position: relative;
   display: inline-flex;
@@ -1660,7 +1670,6 @@ dialog.card-modal::backdrop {
   color: #0b2416;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
-  margin-bottom: var(--space-4);
 }
 .compare-card__badge::before {
   content: "★";
@@ -1679,7 +1688,6 @@ dialog.card-modal::backdrop {
   color: #06213b;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
-  margin-bottom: var(--space-4);
 }
 .compare-card__real-badge::before {
   content: "✓";
