@@ -729,15 +729,36 @@ body.auth-pending main {
   margin-bottom: var(--space-4);
 }
 
-/* ---- Seletor de marketplaces (chips) ---- */
+/* ---- Seletor de marketplaces (chips) ----
+   O chip do Mercado Livre tem bem mais conteúdo que os outros três (dois
+   campos de busca completos, sempre expandidos, contra um select ou um
+   checkbox) — numa grade de 4 colunas iguais ele ficava estreito demais
+   e o texto dos campos era cortado. Por isso o ML ocupa uma linha
+   inteira, só; Amazon/Shopee/TikTok (mais simples, começam fechados)
+   dividem uma segunda linha entre si. */
 .marketplace-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.marketplace-picker__optional {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: var(--space-3);
-  /* Sem isso, os grid items esticam pra altura do maior (o chip do ML,
-     sempre expandido) — os chips fechados (Amazon/Shopee/TikTok) ficavam
-     com um vão vazio embaixo do conteúdo pra "empatar" a altura. */
+  /* Sem isso, os grid items esticam pra altura do maior — os chips
+     fechados ficavam com um vão vazio embaixo do conteúdo pra "empatar"
+     a altura. */
   align-items: start;
+}
+.marketplace-chip__body--cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--space-6);
+}
+@media (min-width: 640px) {
+  .marketplace-chip__body--cols {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .marketplace-chip {
   border: 1.5px solid var(--border-soft);
