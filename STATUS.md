@@ -1,8 +1,8 @@
 # Status do projeto — onde paramos
 
 Última atualização: 14/07/2026 (senha escolhida na criação de usuário, painel reorganizado,
-logo clicável, e busca de produtos já cadastrados no Mercado Livre — traz categoria real e
-frete automático quando disponível).
+logo clicável, busca de produtos já cadastrados no Mercado Livre — traz categoria real e frete
+automático quando disponível — e reserva de % opcional para marketing).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -572,32 +572,51 @@ RS antes de prometer qualquer coisa (2.596 produtos cadastrados lá) — resulta
 - **Pendente, a pedido seu**: a reserva de X% pra cupom/campanha/anúncio (mencionada na mesma
   conversa com a diretora) ainda não foi implementada — combinado fazer depois desta.
 
+### 21. Reserva de % opcional para marketing (cupons/campanhas/anúncios) (14/07/2026)
+
+Última parte do pedido da diretora de e-commerce (ver seção 20). Campo opcional novo, na seção
+"Sua margem": uma fatia a mais do preço final, separada do lucro, sugestão de 10% no
+placeholder, limite de 50% (acima disso, somado à comissão do marketplace, a fórmula quebraria
+— denominador zero ou negativo).
+
+- **Decisão de modelagem, pensada com cuidado antes de codar**: a reserva é tratada
+  matematicamente igual a mais uma comissão percentual do marketplace (entra no mesmo
+  denominador da fórmula, `1 - taxa - reserva`), não como parte do markup. Isso garante que o
+  **lucro líquido nunca muda** com a reserva ligada ou desligada — só o preço final sobe o
+  suficiente pra reservar exatamente aquele % em cima dele. Provado algebricamente antes de
+  implementar, e depois confirmado com valores reais batendo: custo R$100/markup 30% deu
+  R$30,00 de lucro líquido tanto sem reserva (preço R$149,43) quanto com 10% de reserva (preço
+  R$168,83) — só o preço mudou, o lucro ficou idêntico nos dois.
+- Aparece na barra proporcional (nova fatia âmbar, cor do Manual de Marca RS) e na grade de
+  detalhes do popup **só quando usada** (> 0%) — sem reserva, a experiência fica
+  pixel-a-pixel igual a antes desta feature existir.
+- Testado em produção: validação de limite (60% bloqueado), lucro idêntico com/sem reserva,
+  linha de detalhe e fatia da barra aparecendo só quando > 0%.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
 deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, o layout
 novo (2 colunas + popup), a área de Configurações, o popup de ML desconectado, senha escolhida
-na criação de usuário e a busca de produtos cadastrados — tudo testado, publicado em produção.
-Falta:
+na criação de usuário, a busca de produtos cadastrados e a reserva de marketing — tudo testado,
+publicado em produção. Falta:
 
-1. **Reserva de % pra cupom/campanha/anúncio** — pedido da diretora de e-commerce, combinado
-   como próximo passo logo depois da busca de produtos cadastrados (ver seção 20). Ainda não
-   começado.
-2. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
+1. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
    tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
    `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
    categoria, por faixa de preço, com/sem tarifa fixa).
-3. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+2. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
+3. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
    configurado).
-5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+4. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-6. **`vercel dev` local ficou fora do ar** durante a sessão de 14/07 (não só lento — parou de
+5. **`vercel dev` local ficou fora do ar** durante a sessão de 14/07 (não só lento — parou de
    responder de vez) — precisa reiniciar antes da próxima rodada de testes locais.
-7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-8. README.md ainda não documenta a busca de produtos cadastrados nem o campo de senha escolhida
-   (seções 19 e 20) — vale atualizar numa próxima passada de documentação.
+7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
+   nem a reserva de marketing (seções 19-21) — vale atualizar numa próxima passada de
+   documentação.
