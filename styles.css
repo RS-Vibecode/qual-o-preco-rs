@@ -963,13 +963,45 @@ body.auth-pending main {
   cursor: pointer;
 }
 
-/* Cor oficial da marca, usada nos cartões de comparação apenas para
-   identificação visual — nenhuma afiliação com o Mercado Livre é
-   implicada. --brand-glow alimenta a sombra colorida do .compare-card. */
+/* Cores oficiais do Mercado Livre (amarelo + azul do próprio site), no
+   mesmo padrão "fundo branco + acento colorido" usado nas outras 3 marcas
+   abaixo — usado apenas para identificação visual, nenhuma afiliação com
+   o Mercado Livre é implicada. --brand-glow alimenta a sombra colorida
+   do .compare-card. */
 .brand--meli {
-  background: #fff159;
+  background: #FFFFFF;
   color: #17233d;
-  --brand-glow: rgba(255, 241, 89, 0.25);
+  border: 2px solid #3483FA;
+  --brand-glow: rgba(255, 230, 0, 0.35);
+}
+.brand--meli .compare-card__price {
+  color: #3483FA;
+}
+.brand--meli .compare-card__rank {
+  background: #FFE600;
+  color: #17233d;
+}
+.brand--meli .compare-card__badge,
+.brand--meli .compare-card__real-badge {
+  background: #FFE600;
+  color: #17233d;
+}
+.brand--meli .compare-card__badge::before {
+  color: #17233d;
+}
+.brand--meli .compare-card__name {
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+.brand--meli .compare-card__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 2px;
+  background: #FFE600;
 }
 /* Cores oficiais da Amazon: fundo branco (como a própria loja), preço no
    vermelho característico deles ("Amazon deal red"), navy + laranja como
@@ -1102,6 +1134,18 @@ body.auth-pending main {
   font-size: 0.83rem;
   color: var(--text-2);
   margin-top: var(--space-2);
+}
+
+/* Texto descritivo logo abaixo de um .card__title — puxa a margem do
+   título pra cima pra ficar coladinho, mesma ideia do .field__help mas
+   sem estar associado a um campo de formulário específico. */
+.card__subtitle {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-2);
+  max-width: 56ch;
+  margin-top: calc(-1 * var(--space-3));
+  margin-bottom: var(--space-5);
 }
 
 .field__inline-action {
