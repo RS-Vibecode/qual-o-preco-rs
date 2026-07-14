@@ -72,17 +72,31 @@ function formatPercent(value) {
    fórmula pela última vez com os valores finais.
    --------------------------------------------------------- */
 
-function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, markupPct, shippingCost = 0 }) {
+/**
+ * Reserva para marketing (opcional, `marketingReservePct`) — pra cobrir
+ * cupom/campanha/anúncio sem consumir o lucro combinado. Matematicamente
+ * é tratada igual a mais uma "comissão" percentual do marketplace: entra
+ * no mesmo denominador que a taxa percentual (1 - TP - RP), então o
+ * preço sobe o suficiente pra reservar exatamente esse % em cima do
+ * preço final, sem tirar nada do lucro — o `netProfit` continua sendo
+ * sempre `custoBase × markup`, com ou sem reserva (dá pra provar
+ * algebricamente: substituindo suggestedPrice na fórmula de netProfit,
+ * os termos com RP se cancelam). Por isso ela é resolvida no mesmo
+ * lugar que a comissão do marketplace, não como parte do markup.
+ */
+function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, markupPct, shippingCost = 0, marketingReservePct = 0 }) {
   const tp = marketplacePct / 100;
   const mk = markupPct / 100;
+  const rp = marketingReservePct / 100;
 
   const costBase = productCost + extraCosts;
-  const suggestedPrice = (costBase * (1 + mk) + fixedFee + shippingCost) / (1 - tp);
-  const minPrice = (costBase + fixedFee + shippingCost) / (1 - tp);
+  const suggestedPrice = (costBase * (1 + mk) + fixedFee + shippingCost) / (1 - tp - rp);
+  const minPrice = (costBase + fixedFee + shippingCost) / (1 - tp - rp);
 
   const commissionValue = suggestedPrice * tp; // comissão percentual, em reais
-  const totalMlFees = commissionValue + fixedFee; // só as taxas do ML (sem frete)
-  const totalCosts = costBase + shippingCost + totalMlFees; // custo + frete + taxas do ML
+  const marketingReserveValue = suggestedPrice * rp; // reserva de marketing, em reais
+  const totalMlFees = commissionValue + fixedFee; // só as taxas do ML (sem frete, sem a reserva)
+  const totalCosts = costBase + shippingCost + totalMlFees + marketingReserveValue;
   const netProfit = suggestedPrice - totalCosts;
   const profitOverCostPct = costBase > 0 ? (netProfit / costBase) * 100 : 0; // lucro sobre o custo
   const netMarginPct = suggestedPrice > 0 ? (netProfit / suggestedPrice) * 100 : 0; // margem líquida
@@ -95,6 +109,8 @@ function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, m
     commissionValue,
     fixedFeeValue: fixedFee,
     shippingCostValue: shippingCost,
+    marketingReservePct,
+    marketingReserveValue,
     totalMlFees,
     totalCosts,
     netProfit,
@@ -140,6 +156,7 @@ const fieldConfig = [
   { id: "productCost", required: true, allowEmptyAsZero: false, label: "Custo do produto" },
   { id: "extraCosts", required: false, allowEmptyAsZero: true, label: "Custos adicionais" },
   { id: "markupPct", required: true, allowEmptyAsZero: false, label: "Markup desejado" },
+  { id: "marketingReservePct", required: false, allowEmptyAsZero: true, label: "Reserva para marketing", max: 50 },
 ];
 
 function getFieldEls(id) {
@@ -182,6 +199,13 @@ function readAndValidateField(cfg) {
   const parsed = parseLocaleNumber(raw);
   if (Number.isNaN(parsed)) {
     return { value: null, error: "Use apenas números. Vírgula ou ponto separam os decimais." };
+  }
+  if (cfg.max != null && parsed > cfg.max) {
+    // Some com a comissão do marketplace, entra no mesmo denominador da
+    // fórmula (1 - taxa - reserva) — um valor alto demais deixaria esse
+    // denominador zero ou negativo, quebrando a conta (preço infinito ou
+    // negativo). 50% já é bem mais que qualquer uso razoável.
+    return { value: null, error: `Não pode passar de ${cfg.max}%.` };
   }
   if (parsed < 0) {
     return { value: null, error: "Valores negativos não são permitidos." };
@@ -249,8 +273,11 @@ function buildBreakdownBar(r) {
     { className: "cost", label: "Custo", value: r.totalCost },
     { className: "fees", label: "Taxas ML", value: r.totalMlFees },
     { className: "shipping", label: "Frete", value: r.shippingCostValue },
-    { className: "profit", label: "Lucro", value: r.netProfit },
   ];
+  if (r.marketingReserveValue > 0) {
+    segments.push({ className: "marketing", label: "Reserva mkt.", value: r.marketingReserveValue });
+  }
+  segments.push({ className: "profit", label: "Lucro", value: r.netProfit });
 
   const bar = document.createElement("div");
   bar.className = "compare-card__breakdown";
@@ -488,7 +515,12 @@ function buildFullCard(entry, r, meta) {
   details.append(
     detailRow("Comissão", `${formatPercent(r.commissionPct)} · ${formatBRL(r.commissionValue)}`),
     detailRow("Taxa fixa", formatBRL(r.fixedFeeValue)),
-    detailRow("Frete (vendedor)", formatBRL(r.shippingCostValue)),
+    detailRow("Frete (vendedor)", formatBRL(r.shippingCostValue))
+  );
+  if (r.marketingReserveValue > 0) {
+    details.append(detailRow("Reserva p/ marketing", `${formatPercent(r.marketingReservePct)} · ${formatBRL(r.marketingReserveValue)}`));
+  }
+  details.append(
     detailRow("Total de taxas", formatBRL(r.totalMlFees)),
     detailRow("Total de custos", formatBRL(r.totalCosts)),
     detailRow("Lucro líquido", formatBRL(r.netProfit), { highlight: true }),

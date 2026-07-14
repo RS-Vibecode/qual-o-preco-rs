@@ -1722,6 +1722,7 @@ dialog.card-modal::backdrop {
 .compare-card__breakdown-segment--cost { background: rgba(11, 22, 40, 0.62); }
 .compare-card__breakdown-segment--fees { background: rgba(11, 22, 40, 0.34); }
 .compare-card__breakdown-segment--shipping { background: rgba(11, 22, 40, 0.16); }
+.compare-card__breakdown-segment--marketing { background: #E8A020; }
 .compare-card__breakdown-segment--profit { background: #1f9d5c; }
 
 .compare-card__legend {
@@ -1748,6 +1749,7 @@ dialog.card-modal::backdrop {
 .compare-card__legend i.cost { background: rgba(11, 22, 40, 0.62); }
 .compare-card__legend i.fees { background: rgba(11, 22, 40, 0.34); }
 .compare-card__legend i.shipping { background: rgba(11, 22, 40, 0.16); }
+.compare-card__legend i.marketing { background: #E8A020; }
 .compare-card__legend i.profit { background: #1f9d5c; }
 
 .compare-card__details {

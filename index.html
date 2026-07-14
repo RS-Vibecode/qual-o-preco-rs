@@ -180,6 +180,24 @@
             <p class="field__reference">O markup incide sobre custo do produto + custos adicionais. O frete pago pelo vendedor é somado ao preço final só para ser recuperado — não entra na base do markup.</p>
             <p class="field__error" id="markupPct-error" role="alert" hidden></p>
           </div>
+
+          <div class="field">
+            <label for="marketingReservePct">Reserva para marketing <span class="field__optional">(opcional)</span></label>
+            <div class="input-wrap">
+              <input
+                type="text"
+                id="marketingReservePct"
+                name="marketingReservePct"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="Ex: 10"
+                aria-describedby="marketingReservePct-help marketingReservePct-error"
+              />
+              <span class="input-affix input-affix--suffix" aria-hidden="true">%</span>
+            </div>
+            <p class="field__help" id="marketingReservePct-help">Uma fatia a mais do preço final, separada do lucro, pra sobrar espaço pra cupom, campanha ou anúncio patrocinado sem consumir a margem combinada. Deixe em branco pra não usar. Sugestão comum: 10%.</p>
+            <p class="field__error" id="marketingReservePct-error" role="alert" hidden></p>
+          </div>
         </fieldset>
 
         <fieldset class="field-group">
