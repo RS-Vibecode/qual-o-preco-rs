@@ -7,6 +7,10 @@ const createdResult = document.getElementById("createdResult");
 const createdEmailEl = document.getElementById("createdEmail");
 const createdPasswordEl = document.getElementById("createdPassword");
 const copyPasswordBtn = document.getElementById("copyPasswordBtn");
+const newUserPasswordInput = document.getElementById("newUserPassword");
+const toggleNewUserPasswordBtn = document.getElementById("toggleNewUserPasswordBtn");
+const newUserPasswordSlash = document.getElementById("newUserPasswordSlash");
+const generatePasswordBtn = document.getElementById("generatePasswordBtn");
 const usersTable = document.getElementById("usersTable");
 const usersTableBody = document.getElementById("usersTableBody");
 const usersEmpty = document.getElementById("usersEmpty");
@@ -213,15 +217,55 @@ copyResetPasswordBtn.addEventListener("click", async () => {
   }
 });
 
+toggleNewUserPasswordBtn.addEventListener("click", () => {
+  const isHidden = newUserPasswordInput.type === "password";
+  newUserPasswordInput.type = isHidden ? "text" : "password";
+  newUserPasswordSlash.hidden = isHidden;
+  toggleNewUserPasswordBtn.setAttribute("aria-label", isHidden ? "Ocultar senha" : "Mostrar senha");
+});
+
+/** Mesmo alfabeto/tamanho do gerador do servidor (lib/auth.js,
+ * generateStrongPassword) — sem 0/O/1/l pra evitar confusão ao digitar,
+ * com rejection sampling pra não enviesar os primeiros caracteres do
+ * alfabeto (256 não é múltiplo do tamanho do alfabeto). Só usado como
+ * ponto de partida opcional: o admin pode editar o resultado à vontade
+ * antes de criar o usuário. */
+function generateStrongPasswordClientSide() {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+  const maxUnbiased = 256 - (256 % chars.length);
+  const result = [];
+  while (result.length < 16) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (b >= maxUnbiased) continue;
+      result.push(chars[b % chars.length]);
+      if (result.length === 16) break;
+    }
+  }
+  return result.join("");
+}
+
+generatePasswordBtn.addEventListener("click", () => {
+  newUserPasswordInput.value = generateStrongPasswordClientSide();
+  newUserPasswordInput.type = "text";
+  newUserPasswordSlash.hidden = true;
+  toggleNewUserPasswordBtn.setAttribute("aria-label", "Ocultar senha");
+  clearFieldError("newUserPassword");
+  newUserPasswordInput.focus();
+});
+
 createForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearFieldError("fullName");
   clearFieldError("newUserEmail");
+  clearFieldError("newUserPassword");
   createdResult.hidden = true;
 
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("newUserEmail").value.trim();
   const role = document.getElementById("newUserRole").value;
+  const password = newUserPasswordInput.value;
 
   let hasError = false;
   if (!fullName) {
@@ -230,6 +274,13 @@ createForm.addEventListener("submit", async (event) => {
   }
   if (!email) {
     setFieldError("newUserEmail", "Informe o e-mail.");
+    hasError = true;
+  }
+  if (!password) {
+    setFieldError("newUserPassword", 'Informe uma senha, ou clique em "Gerar senha forte".');
+    hasError = true;
+  } else if (password.length < 8) {
+    setFieldError("newUserPassword", "A senha precisa ter pelo menos 8 caracteres.");
     hasError = true;
   }
   if (hasError) return;
@@ -242,7 +293,7 @@ createForm.addEventListener("submit", async (event) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ email, fullName, role }),
+      body: JSON.stringify({ email, fullName, role, password }),
     });
     const data = await resp.json();
 
@@ -255,6 +306,8 @@ createForm.addEventListener("submit", async (event) => {
     createdPasswordEl.textContent = data.password;
     createdResult.hidden = false;
     createForm.reset();
+    newUserPasswordInput.type = "password";
+    newUserPasswordSlash.hidden = false;
     loadUsers();
   } catch {
     setFieldError("newUserEmail", "Erro de conexão. Tente novamente.");

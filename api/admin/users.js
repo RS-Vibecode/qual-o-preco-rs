@@ -36,13 +36,19 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === "POST") {
-    const { email, fullName, role } = req.body || {};
+    const { email, fullName, role, password } = req.body || {};
     if (!email || !fullName) {
       res.status(400).json({ error: "E-mail e nome completo são obrigatórios." });
       return;
     }
+    // Senha escolhida pelo admin no formulário (com um botão de "gerar" só
+    // como assistência de UI) — o servidor não inventa uma sozinho, mas
+    // ainda valida o tamanho mínimo em caso do formulário ser contornado.
+    if (!password || password.length < 8) {
+      res.status(400).json({ error: "Informe uma senha com pelo menos 8 caracteres." });
+      return;
+    }
     const finalRole = role === "admin" ? "admin" : "client";
-    const password = generateStrongPassword();
 
     try {
       // O gatilho do banco SEMPRE cria a conta como 'client' (não confia em

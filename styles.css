@@ -366,6 +366,19 @@ body::after {
   flex-wrap: wrap;
   row-gap: var(--space-3);
 }
+.site-header__logo-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+.site-header__logo-link:hover {
+  opacity: 0.85;
+}
+.site-header__logo-link:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
 .site-header__logo {
   height: 60px;
   width: auto;
@@ -1089,6 +1102,19 @@ body.auth-pending main {
   font-size: 0.83rem;
   color: var(--text-2);
   margin-top: var(--space-2);
+}
+
+.field__inline-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+.field__inline-action .field__help {
+  margin-top: 0;
+  flex: 1;
+  min-width: 200px;
 }
 
 .field__error {
@@ -2155,36 +2181,45 @@ dialog.card-modal::backdrop {
   border-radius: var(--radius-sm);
   background: rgba(111, 206, 150, 0.1);
   border: 1px solid rgba(111, 206, 150, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 .admin-created-result__title {
   font-weight: 700;
   color: var(--green);
-  margin-bottom: var(--space-1);
 }
-.admin-created-result__details {
-  margin-top: var(--space-3);
+.admin-created-result__field {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
-.admin-created-result__details > div {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-.admin-created-result__details dt {
+.admin-created-result__label {
   color: var(--text-2);
-  font-size: 0.85rem;
-  min-width: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
-.admin-created-result__details dd {
+.admin-created-result__value {
+  display: block;
   font-family: monospace;
   font-size: 0.95rem;
   color: var(--text-1);
   background: var(--bg-4);
-  padding: 0.3rem 0.6rem;
+  padding: 0.55rem 0.75rem;
   border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+.admin-created-result__value-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.admin-created-result__value-row .admin-created-result__value {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-photo-row {

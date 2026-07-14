@@ -24,8 +24,10 @@
 
 <header class="site-header">
   <div class="site-header__inner">
-    <img class="site-header__logo logo--light" src="assets/logo-rs-light-bg.png" alt="RS Soluções Digitais" width="180" height="72" />
-    <img class="site-header__logo logo--dark" src="assets/logo-rs-dark-bg.png" alt="RS Soluções Digitais" width="180" height="72" />
+    <a class="site-header__logo-link" href="index.html" aria-label="Ir para a calculadora">
+      <img class="site-header__logo logo--light" src="assets/logo-rs-light-bg.png" alt="RS Soluções Digitais" width="180" height="72" />
+      <img class="site-header__logo logo--dark" src="assets/logo-rs-dark-bg.png" alt="RS Soluções Digitais" width="180" height="72" />
+    </a>
     <div class="site-header__right">
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
         <svg class="theme-toggle__icon-light" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
@@ -93,7 +95,23 @@
           </div>
         </div>
 
-        <p class="field__help">A senha é gerada automaticamente e aparece uma única vez abaixo — repasse ao cliente pelo canal que preferir.</p>
+        <div class="field">
+          <label for="newUserPassword">Senha</label>
+          <div class="input-wrap">
+            <input type="password" id="newUserPassword" name="password" autocomplete="new-password" aria-describedby="newUserPassword-help newUserPassword-error" />
+            <button type="button" class="input-toggle-visibility" id="toggleNewUserPasswordBtn" aria-label="Mostrar senha">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/>
+              </svg>
+              <span class="input-toggle-visibility__slash" id="newUserPasswordSlash" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="field__error" id="newUserPassword-error" role="alert" hidden></p>
+          <div class="field__inline-action">
+            <button type="button" class="btn btn--secondary btn--sm" id="generatePasswordBtn">Gerar senha forte</button>
+            <p class="field__help" id="newUserPassword-help">Mínimo de 8 caracteres. Você escolhe a senha ou gera uma automaticamente — repasse ao cliente pelo canal que preferir.</p>
+          </div>
+        </div>
 
         <div class="form-actions">
           <button type="submit" class="btn btn--primary" id="create-user-submit">Criar usuário</button>
@@ -102,17 +120,17 @@
 
       <div class="admin-created-result" id="createdResult" hidden>
         <p class="admin-created-result__title">Usuário criado com sucesso!</p>
-        <dl class="admin-created-result__details">
-          <div>
-            <dt>E-mail</dt>
-            <dd id="createdEmail"></dd>
+        <div class="admin-created-result__field">
+          <span class="admin-created-result__label">E-mail</span>
+          <span class="admin-created-result__value" id="createdEmail"></span>
+        </div>
+        <div class="admin-created-result__field">
+          <span class="admin-created-result__label">Senha</span>
+          <div class="admin-created-result__value-row">
+            <span class="admin-created-result__value" id="createdPassword"></span>
+            <button type="button" class="btn btn--secondary btn--sm" id="copyPasswordBtn">Copiar</button>
           </div>
-          <div>
-            <dt>Senha</dt>
-            <dd id="createdPassword"></dd>
-            <button type="button" class="btn btn--secondary" id="copyPasswordBtn">Copiar senha</button>
-          </div>
-        </dl>
+        </div>
       </div>
     </section>
 
@@ -121,17 +139,17 @@
 
       <div class="admin-created-result" id="resetResult" hidden>
         <p class="admin-created-result__title">Senha redefinida com sucesso!</p>
-        <dl class="admin-created-result__details">
-          <div>
-            <dt>E-mail</dt>
-            <dd id="resetEmail"></dd>
+        <div class="admin-created-result__field">
+          <span class="admin-created-result__label">E-mail</span>
+          <span class="admin-created-result__value" id="resetEmail"></span>
+        </div>
+        <div class="admin-created-result__field">
+          <span class="admin-created-result__label">Nova senha</span>
+          <div class="admin-created-result__value-row">
+            <span class="admin-created-result__value" id="resetPassword"></span>
+            <button type="button" class="btn btn--secondary btn--sm" id="copyResetPasswordBtn">Copiar</button>
           </div>
-          <div>
-            <dt>Nova senha</dt>
-            <dd id="resetPassword"></dd>
-            <button type="button" class="btn btn--secondary btn--sm" id="copyResetPasswordBtn">Copiar senha</button>
-          </div>
-        </dl>
+        </div>
       </div>
       <p class="auth-card__form-error" id="usersActionError" role="alert" hidden></p>
 
