@@ -65,6 +65,21 @@
       <p class="admin-page__subtitle">Crie contas de clientes e administradores — não existe cadastro público, só quem você cadastrar aqui entra na ferramenta.</p>
     </div>
 
+    <div class="admin-stats reveal" id="adminStats">
+      <div class="admin-stats__item">
+        <span class="admin-stats__value" id="statsClientCount">—</span>
+        <span class="admin-stats__label">Clientes</span>
+      </div>
+      <div class="admin-stats__item">
+        <span class="admin-stats__value" id="statsAdminCount">—</span>
+        <span class="admin-stats__label">Administradores</span>
+      </div>
+      <div class="admin-stats__item">
+        <span class="admin-stats__value" id="statsRateCount">—</span>
+        <span class="admin-stats__label" id="statsRateLabel">Categorias cadastradas</span>
+      </div>
+    </div>
+
     <section class="card admin-page__form-card reveal" aria-labelledby="create-user-title">
       <h2 id="create-user-title" class="card__title">Criar usuário</h2>
 
@@ -153,6 +168,10 @@
       </div>
       <p class="auth-card__form-error" id="usersActionError" role="alert" hidden></p>
 
+      <div class="table-search">
+        <input type="search" id="usersSearch" placeholder="Buscar por nome ou e-mail..." aria-label="Buscar usuário" autocomplete="off" />
+      </div>
+
       <table class="admin-table" id="usersTable" hidden>
         <thead>
           <tr>
@@ -172,6 +191,12 @@
       <h2 id="rates-title" class="card__title">Taxas de marketplace</h2>
       <p class="admin-page__subtitle">Editável por você — a calculadora usa esses valores como referência (não é uma taxa em tempo real, como a do Mercado Livre). Amazon: painel oficial do vendedor, conferido em 13/07/2026. Shopee: central de ajuda do vendedor, conferida em 13/07/2026.</p>
 
+      <button type="button" class="accordion-toggle" id="rateFormToggle" aria-expanded="false" aria-controls="rateFormAccordion">
+        <svg class="accordion-toggle__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/></svg>
+        Nova categoria
+        <svg class="accordion-toggle__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="accordion-body" id="rateFormAccordion" hidden>
       <form id="rate-form" novalidate>
         <input type="hidden" id="rateId" value="" />
 
@@ -250,8 +275,13 @@
           <button type="button" class="btn btn--secondary" id="rate-cancel-edit" hidden>Cancelar edição</button>
         </div>
       </form>
+      </div>
 
       <p class="auth-card__form-error" id="rateActionError" role="alert" hidden></p>
+
+      <div class="table-search">
+        <input type="search" id="ratesSearch" placeholder="Buscar categoria..." aria-label="Buscar categoria de taxa" autocomplete="off" />
+      </div>
 
       <table class="admin-table" id="ratesTable" hidden>
         <thead>

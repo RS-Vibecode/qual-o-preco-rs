@@ -1,5 +1,30 @@
 "use strict";
 
+/* Ícones dos botões de ação compactos da tabela de taxas (ver loadRates)
+   — construídos via DOM (createElementNS), não innerHTML, mesmo padrão
+   de segurança já usado no resto do arquivo (nada de HTML vindo de
+   string interpolada). */
+const ICON_PATH_EDIT = "M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Zm11.5-13.5 3 3";
+const ICON_PATH_DELETE = "M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3";
+
+function createIcon(pathD) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", pathD);
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(path);
+  return svg;
+}
+
 const createForm = document.getElementById("create-user-form");
 const createSubmitBtn = document.getElementById("create-user-submit");
 const createSubmitDefaultText = createSubmitBtn.textContent;
@@ -62,16 +87,34 @@ function clearActionMessages() {
   resetResult.hidden = true;
 }
 
-async function loadUsers() {
-  const resp = await fetch("/api/admin/users", { credentials: "same-origin" });
-  if (!resp.ok) return;
-  const { users } = await resp.json();
+let allUsers = [];
+const usersSearchInput = document.getElementById("usersSearch");
+const statsClientCount = document.getElementById("statsClientCount");
+const statsAdminCount = document.getElementById("statsAdminCount");
 
+function updateUserStats() {
+  if (!statsClientCount || !statsAdminCount) return;
+  statsClientCount.textContent = String(allUsers.filter((u) => u.role !== "admin").length);
+  statsAdminCount.textContent = String(allUsers.filter((u) => u.role === "admin").length);
+}
+
+function filterUsers(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return allUsers;
+  return allUsers.filter(
+    (u) => (u.fullName || "").toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+  );
+}
+
+function renderUsersTable(users) {
   usersTableBody.replaceChildren();
 
   if (!users.length) {
     usersTable.hidden = true;
     usersEmpty.hidden = false;
+    usersEmpty.textContent = allUsers.length
+      ? "Nenhum usuário encontrado pra essa busca."
+      : "Nenhum usuário cadastrado ainda.";
     return;
   }
 
@@ -127,6 +170,19 @@ async function loadUsers() {
   });
   usersTableBody.appendChild(fragment);
 }
+
+async function loadUsers() {
+  const resp = await fetch("/api/admin/users", { credentials: "same-origin" });
+  if (!resp.ok) return;
+  const { users } = await resp.json();
+  allUsers = users;
+  updateUserStats();
+  renderUsersTable(filterUsers(usersSearchInput ? usersSearchInput.value : ""));
+}
+
+usersSearchInput?.addEventListener("input", () => {
+  renderUsersTable(filterUsers(usersSearchInput.value));
+});
 
 usersTableBody.addEventListener("click", async (event) => {
   const btn = event.target.closest("button[data-action]");
@@ -370,6 +426,8 @@ function formatBRLSimple(value) {
 }
 
 const rateForm = document.getElementById("rate-form");
+const rateFormToggle = document.getElementById("rateFormToggle");
+const rateFormAccordion = document.getElementById("rateFormAccordion");
 const rateMarketplaceSelect = document.getElementById("rateMarketplace");
 const rateSubmitBtn = document.getElementById("rate-submit");
 const rateCancelEditBtn = document.getElementById("rate-cancel-edit");
@@ -377,6 +435,12 @@ const rateActionError = document.getElementById("rateActionError");
 const ratesTable = document.getElementById("ratesTable");
 const ratesTableBody = document.getElementById("ratesTableBody");
 const ratesEmpty = document.getElementById("ratesEmpty");
+
+rateFormToggle.addEventListener("click", () => {
+  const expanded = rateFormToggle.getAttribute("aria-expanded") === "true";
+  rateFormToggle.setAttribute("aria-expanded", String(!expanded));
+  rateFormAccordion.hidden = expanded;
+});
 
 const rateFieldIds = ["rateCategory", "ratePct", "rateMinFee", "rateTierThreshold", "ratePctAbove", "rateFixedFee", "rateNote"];
 
@@ -444,6 +508,8 @@ function clearRateForm() {
 }
 
 function fillRateForm(rate) {
+  rateFormToggle.setAttribute("aria-expanded", "true");
+  rateFormAccordion.hidden = false;
   document.getElementById("rateId").value = rate.id;
   rateMarketplaceSelect.value = rate.marketplace;
   document.getElementById("rateCategory").value = rate.category_label;
@@ -476,16 +542,35 @@ function describeRateDetails(rate) {
   return parts.length ? parts.join(" · ") : "—";
 }
 
-async function loadRates() {
-  const resp = await fetch(`/api/marketplace-rates?marketplace=${encodeURIComponent(rateMarketplaceSelect.value)}`, { credentials: "same-origin" });
-  if (!resp.ok) return;
-  const { rates } = await resp.json();
+let allRates = [];
+const ratesSearchInput = document.getElementById("ratesSearch");
+const statsRateCount = document.getElementById("statsRateCount");
+const statsRateLabel = document.getElementById("statsRateLabel");
 
+function updateRateStats() {
+  if (!statsRateCount) return;
+  statsRateCount.textContent = String(allRates.length);
+  if (statsRateLabel) {
+    const mpName = rateMarketplaceSelect.selectedOptions[0]?.textContent || "";
+    statsRateLabel.textContent = `Categorias cadastradas (${mpName})`;
+  }
+}
+
+function filterRates(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return allRates;
+  return allRates.filter((r) => r.category_label.toLowerCase().includes(q));
+}
+
+function renderRatesTable(rates) {
   ratesTableBody.replaceChildren();
 
   if (!rates.length) {
     ratesTable.hidden = true;
     ratesEmpty.hidden = false;
+    ratesEmpty.textContent = allRates.length
+      ? "Nenhuma categoria encontrada pra essa busca."
+      : "Nenhuma categoria cadastrada ainda.";
     return;
   }
 
@@ -512,14 +597,18 @@ async function loadRates() {
 
     const editBtn = document.createElement("button");
     editBtn.type = "button";
-    editBtn.className = "btn btn--secondary btn--sm";
-    editBtn.textContent = "Editar";
+    editBtn.className = "admin-table__icon-btn";
+    editBtn.setAttribute("aria-label", `Editar ${rate.category_label}`);
+    editBtn.title = "Editar";
+    editBtn.appendChild(createIcon(ICON_PATH_EDIT));
     editBtn.addEventListener("click", () => fillRateForm(rate));
 
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
-    deleteBtn.className = "btn btn--secondary btn--sm btn--danger";
-    deleteBtn.textContent = "Remover";
+    deleteBtn.className = "admin-table__icon-btn admin-table__icon-btn--danger";
+    deleteBtn.setAttribute("aria-label", `Remover ${rate.category_label}`);
+    deleteBtn.title = "Remover";
+    deleteBtn.appendChild(createIcon(ICON_PATH_DELETE));
     deleteBtn.addEventListener("click", async () => {
       if (!window.confirm(`Remover a categoria "${rate.category_label}"?`)) return;
       deleteBtn.disabled = true;
@@ -552,6 +641,19 @@ async function loadRates() {
   });
   ratesTableBody.appendChild(fragment);
 }
+
+async function loadRates() {
+  const resp = await fetch(`/api/marketplace-rates?marketplace=${encodeURIComponent(rateMarketplaceSelect.value)}`, { credentials: "same-origin" });
+  if (!resp.ok) return;
+  const { rates } = await resp.json();
+  allRates = rates;
+  updateRateStats();
+  renderRatesTable(filterRates(ratesSearchInput ? ratesSearchInput.value : ""));
+}
+
+ratesSearchInput?.addEventListener("input", () => {
+  renderRatesTable(filterRates(ratesSearchInput.value));
+});
 
 rateForm.addEventListener("submit", async (event) => {
   event.preventDefault();

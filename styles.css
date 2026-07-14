@@ -2410,6 +2410,9 @@ dialog.card-modal::backdrop {
   .admin-manage-layout .admin-page__intro {
     grid-column: 1 / -1;
   }
+  .admin-manage-layout .admin-stats {
+    grid-column: 1 / -1;
+  }
   .admin-manage-layout .admin-page__form-card {
     max-width: none;
   }
@@ -2417,6 +2420,60 @@ dialog.card-modal::backdrop {
 .admin-manage-layout .admin-page__wide-card {
   grid-column: 1 / -1;
 }
+
+/* ---- Estatísticas rápidas no topo do painel admin ---- */
+.admin-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.admin-stats__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-5);
+  background: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(16px);
+  min-width: 150px;
+}
+.admin-stats__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--blue-2);
+}
+.admin-stats__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---- Busca/filtro client-side acima de uma tabela do admin ---- */
+.table-search {
+  margin-top: var(--space-4);
+}
+.table-search input {
+  width: 100%;
+  max-width: 320px;
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-4);
+  padding: 0.65rem var(--space-4);
+  font-size: 0.92rem;
+  font-family: var(--font-body);
+  color: var(--text-1);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.table-search input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(40, 128, 185, 0.25);
+}
+.table-search input::placeholder { color: rgba(141, 155, 176, 0.55); }
 
 .field-row {
   display: flex;
@@ -2567,16 +2624,18 @@ dialog.card-modal::backdrop {
   font-size: 0.9rem;
   color: var(--text-1);
 }
-/* Empilhados (não lado a lado) — a coluna "Ações" só precisa caber a
-   largura de UM botão, não dois, o que evita que a tabela (5 colunas)
-   fique mais larga que o cartão nas larguras comuns de tela. */
+/* Lado a lado, largura de conteúdo (não mais empilhados/100% de
+   largura) — numa tabela com muitas linhas (ex.: taxas de marketplace,
+   39 categorias da Amazon já cadastradas), botões empilhados ocupavam
+   ~100px de altura por linha; lado a lado cabe em ~50px. */
 .admin-table__actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
 }
-.admin-table__actions .btn { width: 100%; }
+.admin-table__actions .btn { width: auto; }
 /* Rede de segurança pra telas realmente estreitas ou nomes/e-mails
    longos: em vez de vazar pra fora do cartão (que tem overflow: visible)
    e ficar cortado pela borda, a tabela ganha scroll horizontal próprio. */
@@ -2586,6 +2645,43 @@ dialog.card-modal::backdrop {
 }
 .admin-table tbody tr:hover {
   background: rgba(40, 128, 185, 0.06);
+}
+
+/* Botões de ação só com ícone (usado na tabela de taxas — muitas linhas,
+   precisa ser o mais compacto possível) — mesmo padrão de tamanho/toque
+   dos botões .btn--sm, só sem o texto. */
+.admin-table__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.admin-table__icon-btn:hover {
+  background: rgba(40, 128, 185, 0.08);
+  border-color: var(--blue-2);
+  color: var(--blue-2);
+}
+.admin-table__icon-btn--danger {
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+.admin-table__icon-btn--danger:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+.admin-table__icon-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
 }
 
 /* ===== Utility ===== */
