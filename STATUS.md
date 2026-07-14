@@ -2,7 +2,8 @@
 
 Última atualização: 14/07/2026 (repaginação visual completa em andamento — Fases A e B
 concluídas: formulário da calculadora com chips de marketplace/accordion/tooltips/prévia ao
-vivo, e painel admin com tabela de taxas compacta, busca e accordion de nova categoria).
+vivo, painel admin com tabela de taxas compacta/busca/accordion, e logo oficial de cada
+marketplace nos chips e nos cartões de resultado).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -645,13 +646,31 @@ empilhados em coluna cheia) — a tabela sozinha passava de 4.900px de altura.
   tabelas, accordion abre/fecha e auto-expande ao editar, ícones com `aria-label` descritivo,
   tema escuro conferido. Publicado em produção.
 
+### 24. Logos oficiais dos marketplaces nos chips e nos cartões (14/07/2026)
+
+Pedido extra do cliente depois de ver a Fase A no ar: cada marketplace ganhou seu logo oficial
+num selo branco (28px nos chips de seleção do formulário, 26px nos cartões de resultado, 22px
+no cartão compacto) — normaliza formato entre logos bem diferentes entre si (Shopee é um
+retângulo, TikTok é estreito, Mercado Livre já vem redondo). Arquivos em
+`assets/marketplace-logos/` (auto-hospedados, mantendo o CSP `img-src 'self'` sem exceções
+novas):
+
+- `amazon.svg`, `shopee.svg`, `tiktok.svg`: baixados do Simple Icons (simple-icons.org, CC0),
+  com a cor oficial de cada marca aplicada no path.
+- `meli.svg`: favicon oficial do Mercado Livre, baixado direto de mercadolivre.com.br (mesma
+  paleta oficial da marca).
+
+Testado local (chips, cartões compactos, popup, tema claro/escuro) — nenhuma imagem falhou ao
+carregar. Publicado em produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
 deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, a área de
 Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a busca de
-produtos cadastrados, a reserva de marketing e as Fases A e B da repaginação (formulário da
-calculadora e painel admin) — tudo testado, publicado em produção. Falta:
+produtos cadastrados, a reserva de marketing, as Fases A e B da repaginação (formulário da
+calculadora e painel admin) e os logos oficiais dos marketplaces — tudo testado, publicado em
+produção. Falta:
 
 1. **Fase C da repaginação** — próximo passo imediato: polimento geral
    (login/perfil/popups/componentes); login e perfil já estão bons, não deve precisar de
@@ -671,5 +690,5 @@ calculadora e painel admin) — tudo testado, publicado em produção. Falta:
 6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
 7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   a reserva de marketing, nem a repaginação visual (seções 19-23) — vale atualizar numa
+   a reserva de marketing, nem a repaginação visual (seções 19-24) — vale atualizar numa
    próxima passada de documentação.
