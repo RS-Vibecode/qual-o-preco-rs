@@ -831,9 +831,9 @@ body.auth-pending main {
 .marketplace-chip__head {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-3);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -867,6 +867,14 @@ body.auth-pending main {
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--text-1);
+  /* Sem isso, nomes mais longos (ex.: "TikTok Shop") quebram em duas
+     linhas dentro do cabeçalho flex — desalinha o selo/chevron em relação
+     aos chips vizinhos com nome de uma palavra só. min-width:0 é o que
+     permite o item flex encolher a ponto de truncar em vez de quebrar. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .marketplace-chip__status {
   margin-left: auto;
