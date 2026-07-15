@@ -969,6 +969,60 @@ function buildAmazonEntry(rate) {
 }
 
 /* ---------------------------------------------------------
+   Magalu (opcional) — igual à Amazon (sem API pública de taxa por venda,
+   ver pesquisa no README), mas a comissão do Magalu não varia por
+   categoria de produto, varia pela FORMA DE REPASSE escolhida pelo
+   vendedor (parcelado × à vista/antecipado) — por isso o "rateCategory"
+   cadastrado no admin pra esse marketplace é a forma de repasse, não uma
+   categoria de produto. Reaproveita o mesmo "kind" (amazon-tiered) e o
+   mesmo seletor simples (lista vem de quem o admin cadastrou).
+   --------------------------------------------------------- */
+
+const magaluOptionSelect = document.getElementById("magaluOption");
+let magaluRates = [];
+
+async function loadMagaluRates() {
+  if (!magaluOptionSelect) return;
+  try {
+    const resp = await fetch("/api/marketplace-rates?marketplace=magalu", { credentials: "same-origin" });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    magaluRates = Array.isArray(data.rates) ? data.rates : [];
+
+    const fragment = document.createDocumentFragment();
+    magaluRates.forEach((rate) => {
+      const option = document.createElement("option");
+      option.value = rate.id;
+      option.textContent = rate.category_label;
+      fragment.appendChild(option);
+    });
+    magaluOptionSelect.appendChild(fragment);
+  } catch {
+    // sem opções cadastradas ainda, ou falha de rede — o Magalu
+    // simplesmente não aparece na comparação, o resto funciona normal
+  }
+}
+
+loadMagaluRates();
+
+/** Constrói uma entrada de cartão compatível com resolveEntryPricing a
+ * partir de uma linha de marketplace_rates (ver resolveFeesForEntry). */
+function buildMagaluEntry(rate) {
+  return {
+    id: `magalu_${rate.id}`,
+    label: "Magalu",
+    theme: "magalu",
+    kind: "amazon-tiered",
+    pct: Number(rate.pct),
+    tierThreshold: rate.tier_threshold != null ? Number(rate.tier_threshold) : null,
+    pctAboveThreshold: rate.pct_above_threshold != null ? Number(rate.pct_above_threshold) : null,
+    fixedFee: Number(rate.fixed_fee) || 0,
+    minFee: Number(rate.min_fee) || 0,
+    captionNote: `${rate.category_label} · taxa de referência, não é consulta em tempo real.`,
+  };
+}
+
+/* ---------------------------------------------------------
    Shopee (opcional) — sem categoria por produto (a comissão da Shopee não
    varia por categoria, só por faixa de preço do item), então não é um
    seletor de categoria como o da Amazon, é um checkbox simples. As faixas
@@ -1274,6 +1328,12 @@ form.addEventListener("submit", async (event) => {
   if (selectedAmazonRateId) {
     const rate = amazonRates.find((r) => r.id === selectedAmazonRateId);
     if (rate) feesToUse = [...feesToUse, buildAmazonEntry(rate)];
+  }
+
+  const selectedMagaluRateId = magaluOptionSelect?.value;
+  if (selectedMagaluRateId) {
+    const rate = magaluRates.find((r) => r.id === selectedMagaluRateId);
+    if (rate) feesToUse = [...feesToUse, buildMagaluEntry(rate)];
   }
 
   if (shopeeIncludeCheckbox?.checked) {

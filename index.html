@@ -376,6 +376,31 @@
             </div>
           </div>
 
+          <div class="marketplace-chip marketplace-chip--magalu" data-marketplace="magalu">
+            <button type="button" class="marketplace-chip__head" id="magaluChipToggle" aria-expanded="false" aria-controls="magaluChipBody">
+              <span class="marketplace-chip__logo"><img src="assets/marketplace-logos/magalu.svg" alt="" width="20" height="20" /></span>
+              <span class="marketplace-chip__name">Magalu</span>
+              <span class="marketplace-chip__status" id="magaluChipStatus">Não incluído</span>
+              <svg class="marketplace-chip__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="marketplace-chip__body" id="magaluChipBody" hidden>
+              <div class="field">
+                <div class="field__label-row">
+                  <label for="magaluOption">Forma de repasse</label>
+                  <span class="field-tooltip">
+                    <button type="button" class="field-tooltip__btn" id="magaluOption-tip-btn" aria-expanded="false" aria-controls="magaluOption-help" aria-label="Mais informações sobre a taxa do Magalu">?</button>
+                    <span class="field-tooltip__bubble" id="magaluOption-help" role="tooltip">O Magalu não tem API pública de taxa por venda — o valor é de referência (cadastrado no painel admin), não uma consulta em tempo real como a do Mercado Livre. A comissão do Magalu varia principalmente pela forma de repasse escolhida (parcelado ou à vista/antecipado), não por categoria do produto.</span>
+                  </span>
+                </div>
+                <div class="input-wrap">
+                  <select id="magaluOption" name="magaluOption">
+                    <option value="">Não incluir o Magalu na comparação</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
           </div>
 
         </div>

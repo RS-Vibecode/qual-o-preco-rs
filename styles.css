@@ -826,6 +826,7 @@ body.auth-pending main {
 .marketplace-chip--amazon { --chip-accent: #131921; --chip-glow: rgba(19, 25, 33, 0.14); }
 .marketplace-chip--shopee { --chip-accent: #EE4D2D; --chip-glow: rgba(238, 77, 45, 0.18); }
 .marketplace-chip--tiktok { --chip-accent: #FE2C55; --chip-glow: rgba(254, 44, 85, 0.18); }
+.marketplace-chip--magalu { --chip-accent: #0E89FF; --chip-glow: rgba(14, 137, 255, 0.18); }
 
 .marketplace-chip__head {
   display: flex;
@@ -1439,6 +1440,44 @@ body.auth-pending main {
   height: 3px;
   border-radius: 2px;
   background: linear-gradient(90deg, #25F4EE 50%, #FE2C55 50%);
+}
+
+/* Cor oficial do Magalu (azul da marca), no mesmo padrão "fundo branco +
+   acento colorido" usado nas outras marcas acima. */
+.brand--magalu {
+  background: #FFFFFF;
+  color: #17233d;
+  border: 2px solid #0E89FF;
+  --brand-glow: rgba(14, 137, 255, 0.3);
+}
+.brand--magalu .compare-card__price {
+  color: #0E89FF;
+}
+.brand--magalu .compare-card__rank {
+  background: #0E89FF;
+  color: #FFFFFF;
+}
+.brand--magalu .compare-card__badge,
+.brand--magalu .compare-card__real-badge {
+  background: #0E89FF;
+  color: #FFFFFF;
+}
+.brand--magalu .compare-card__badge::before {
+  color: #FFFFFF;
+}
+.brand--magalu .compare-card__name {
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+.brand--magalu .compare-card__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 2px;
+  background: #0E89FF;
 }
 
 .field__reference {

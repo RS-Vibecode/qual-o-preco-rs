@@ -60,6 +60,14 @@ setupMarketplaceChip({
   isActiveFn: (el) => el.checked,
 });
 
+setupMarketplaceChip({
+  toggleId: "magaluChipToggle",
+  bodyId: "magaluChipBody",
+  statusEl: document.getElementById("magaluChipStatus"),
+  controlEl: document.getElementById("magaluOption"),
+  isActiveFn: (el) => !!el.value,
+});
+
 /* ---- Accordion de frete ---- */
 const freightToggle = document.getElementById("freightToggle");
 const freightBody = document.getElementById("freightBody");
@@ -144,7 +152,7 @@ markupPctInput?.addEventListener("input", updateLivePreview);
 document.getElementById("clear-btn")?.addEventListener("click", () => {
   if (livePreview) livePreview.hidden = true;
 
-  ["amazonCategory", "shopeeInclude", "tiktokInclude"].forEach((id) => {
+  ["amazonCategory", "shopeeInclude", "tiktokInclude", "magaluOption"].forEach((id) => {
     document.getElementById(id)?.dispatchEvent(new Event("change"));
   });
 
@@ -152,6 +160,7 @@ document.getElementById("clear-btn")?.addEventListener("click", () => {
     ["amazonChipToggle", "amazonChipBody"],
     ["shopeeChipToggle", "shopeeChipBody"],
     ["tiktokChipToggle", "tiktokChipBody"],
+    ["magaluChipToggle", "magaluChipBody"],
   ].forEach(([toggleId, bodyId]) => {
     const toggle = document.getElementById(toggleId);
     const body = document.getElementById(bodyId);

@@ -476,6 +476,14 @@ const MARKETPLACE_COPY = {
     showMinFee: false,
     fixedFeeHelp: 'Tarifa fixa da própria faixa (chamada de "taxa por item vendido" pelo TikTok Shop) — não é opcional.',
   },
+  magalu: {
+    categoryLabel: "Forma de repasse",
+    tierMain: "Não se aplica ",
+    tierHint: "(deixe em branco)",
+    showPctAbove: false,
+    showMinFee: false,
+    fixedFeeHelp: "Tarifa fixa por item, variável por categoria (R$5 a R$10 segundo o Portal do Seller) — cadastre uma referência (ex.: a média R$7,50) e detalhe a variação na Observação.",
+  },
 };
 
 function updateRateFormCopy() {
