@@ -1,8 +1,8 @@
 # Status do projeto — onde paramos
 
-Última atualização: 15/07/2026 (Magalu adicionado como 5º marketplace de referência, e
-correção de cartões de resultado com altura inconsistente quando sobram sozinhos numa nova
-linha da grade).
+Última atualização: 15/07/2026 (Magalu como 5º marketplace, correção de altura dos cartões,
+correção da taxa fixa do ML perto do limiar de R$12,50, e início da migração de
+infraestrutura pra conta/organização da empresa no Vercel e GitHub).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -724,34 +724,88 @@ segmento na barra, tema escuro). Publicado em produção.
 Testado local (fluxo completo do Magalu, dados de Amazon/Shopee/TikTok confirmados intactos
 via API direta, 6 cartões com altura idêntica). Publicado em produção.
 
+### 28. Correção da taxa fixa do ML perto do limiar de R$12,50 (15/07/2026)
+
+Bug real, reportado pelo cliente: com categoria selecionada e um preço final perto do limiar
+de R$12,50 (onde a taxa fixa do ML dá um salto grande), o cálculo iterativo conseguia terminar
+mostrando "Taxa fixa R$0,00" pra um preço final ABAIXO do limiar — inconsistente, já que
+qualquer preço nessa faixa deveria ter uma taxa fixa considerável.
+
+- **Causa raiz**: a detecção de oscilação comparava "a diferença entre um preço e o próximo é
+  menor que R$0,50" — mas o salto real entre os dois preços do ciclo era de mais de R$6
+  (R$10,91 ↔ R$17,15), bem maior que esse limiar fixo, então a oscilação nunca era detectada.
+  O cálculo esgotava as iterações e devolvia o que a ÚLTIMA rodada calculou, sem critério —
+  dependia só do número de iterações ser par ou ímpar.
+- **Correção**: detecção de ciclo de verdade (guarda cada preço arredondado já consultado; se
+  repetir, é ciclo, não importa o tamanho do salto). Ao detectar, fica com o candidato de maior
+  taxa fixa entre os já vistos (mais seguro pro vendedor) e recalcula o preço final a partir
+  dessas taxas escolhidas, garantindo que o preço exibido sempre bate com a taxa fixa exibida.
+- Verificado ao vivo contra a API real do Mercado Livre antes de mexer no código, e testado de
+  novo depois: caso antes buggy foi de "R$10,91 / taxa fixa R$0,00" (inconsistente) pra
+  "R$17,15 / taxa fixa R$5,49" (consistente). Publicado em produção (site antigo) e confirmado
+  ao vivo com o mesmo cenário.
+
+### 29. Início da migração de infraestrutura pra conta da empresa (15/07/2026)
+
+- **GitHub**: código migrado pra organização da empresa, hoje em
+  `github.com/RS-Vibecode/qual-o-preco-rs` (renomeada de `rssolucoesdigitais` durante a
+  sessão — o Git mantém redirecionamento automático da URL antiga). Repositório trocado pra
+  **privado** (estava público por engano na criação — corrigido). Meu acesso de colaborador
+  (`sh4oze`) confirmado funcionando.
+- **Vercel**: projeto novo criado (`qual-o-preco-rs`, time `consultoriarssolucoesdigitais-9688`),
+  domínio próprio `qualopreco.rssolucoesdigitais.com.br` já apontado. Acesso de deploy
+  configurado via **Access Token** (não login interativo — token com nome "deploy-claude",
+  guardado só localmente, nunca no chat nem no repositório).
+- **Achado importante**: os deploys ficavam com status **"Blocked"** — não era a proteção de
+  visitante (Vercel Authentication, que inclusive já desligamos sem precisar), e sim uma
+  checagem diferente: o Vercel exige que o **autor do commit git** seja um membro reconhecido
+  do time. Como os commits são assinados como Magno (`magno@rssolucoesdigitais.com.br`, feito
+  de propósito — ver decisão de autoria dos commits), e adicionar esse e-mail como membro exige
+  upgrade de plano pago, a solução sem custo foi trocar o e-mail do autor dos commits **daqui
+  pra frente** (não reescreve histórico) pra `consultoria.rssolucoesdigitais@gmail.com` — o
+  e-mail que já é o dono/membro único do time Vercel e também do GitHub da empresa. Nome
+  continua "Magno Frutuoso", só o e-mail mudou.
+- **Variáveis de ambiente**: Supabase mantido (mesmo projeto, mesmos dados — só copiados os
+  valores, sem recriar nada). Redis/Upstash e credenciais do ML — a confirmar se seguem o
+  mesmo caminho.
+- **Ainda falta**: confirmar que um deploy com o novo autor de commit passa (não fica mais
+  "Blocked"); atualizar `ML_REDIRECT_URI` (Vercel + DevCenter do Mercado Livre) pro domínio
+  novo assim que ele estiver 100% no ar; decidir o que fazer com o projeto/domínio antigo
+  (`qual-o-preco-rs-v2.vercel.app`) depois que o novo estiver confirmado — **não apagar antes
+  de testar o novo de ponta a ponta** (login, cálculo, conexão ML).
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
 deploy em produção, Amazon + Shopee + TikTok Shop + Magalu como marketplaces de referência, a
 área de Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a
 busca de produtos cadastrados, a reserva de marketing, as Fases A e B da repaginação (formulário
-da calculadora e painel admin), os logos oficiais dos marketplaces e a correção de altura dos
-cartões — tudo testado, publicado em produção. Falta:
+da calculadora e painel admin), os logos oficiais dos marketplaces, a correção de altura dos
+cartões e a correção da taxa fixa do ML — tudo testado, publicado em produção (site antigo).
+Falta:
 
-1. **Migração de infraestrutura (Vercel + GitHub)**: o cliente avisou que vamos trocar pra
-   outro projeto Vercel e outro repositório GitHub, pra configurar o domínio próprio
-   direitinho. Ainda não tenho detalhes (novo domínio, se é conta nova ou só projeto novo,
-   se as variáveis de ambiente — Supabase, Redis/Upstash, credenciais do Mercado Livre —
-   precisam ser recriadas do zero ou só migradas). Pendente de mais informação antes de
-   começar; é uma mudança sensível (afeta o `redirect_uri` do OAuth do ML, que hoje está fixo
-   na URL de produção atual — ver nota no topo deste arquivo).
+1. **Terminar a migração de infraestrutura** (ver seção 29 acima) — confirmar que o deploy no
+   projeto novo da empresa sai do estado "Blocked", atualizar `ML_REDIRECT_URI` pro domínio
+   novo (Vercel + DevCenter do ML), testar tudo de ponta a ponta lá antes de considerar o
+   projeto antigo dispensável.
 2. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
    perfil já estão bons, não deve precisar de reestruturação, só ajustes finos de consistência.
-3. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
+3. **Guia de categorias do ML pra equipe**: cliente pediu uma forma de a equipe saber que tipo
+   de produto entra em cada categoria ao usar a busca da calculadora. Direção proposta (ainda
+   não implementada): mostrar o caminho completo da categoria (ex.: "Eletrônicos, Áudio e
+   Vídeo > Áudio > Fones de Ouvido") quando uma é selecionada, não só o nome final — confirmado
+   que a API pública do ML (`GET /categories/{id}`, campo `path_from_root`) tem esse dado
+   pronto, sem precisar de autenticação.
+4. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
    do painel do vendedor, eu confiro e cadastro em `marketplace_rates`.
-4. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+5. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+6. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   a reserva de marketing, nem a repaginação visual (seções 19-27) — vale atualizar numa
+8. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
+   a reserva de marketing, nem a repaginação visual (seções 19-29) — vale atualizar numa
    próxima passada de documentação.
