@@ -1267,19 +1267,46 @@ form.addEventListener("submit", async (event) => {
     //
     // Bem perto do limiar de R$12,50 (ver estimateReferenceFixedFee), a
     // taxa fixa dá um salto grande e pode não existir um preço de
-    // equilíbrio matemático — a consulta fica "pingue-pongue" entre dois
-    // valores. Quando isso é detectado, fica com o candidato de MAIOR
-    // preço: ele corresponde a assumir que a taxa fixa se aplica, o que é
-    // mais seguro pro vendedor (se o preço real acabar sem taxa fixa, o
-    // vendedor ganha uma margem melhor que a mostrada — nunca pior).
-    const MAX_ITERATIONS = 5;
+    // equilíbrio matemático — a consulta entra num CICLO, alternando entre
+    // dois preços arredondados (ex.: consulta R$11 → taxa fixa aplica →
+    // preço sugerido sobe pra R$17 → consulta R$17 → taxa fixa NÃO aplica
+    // → preço sugerido cai de volta pra R$11 → repete pra sempre).
+    //
+    // A detecção não pode ser "a diferença entre um preço e o próximo é
+    // pequena" (era assim antes): esse salto pode ser bem maior que
+    // qualquer limiar fixo de tolerância (nesse exemplo, de R$11 pra
+    // R$17 são mais de R$6 de diferença a cada rodada, nunca convergindo
+    // por essa métrica). O que caracteriza um ciclo de verdade é
+    // consultar um preço arredondado que JÁ tinha sido consultado antes
+    // nesta mesma simulação — não importa o tamanho do salto.
+    //
+    // Ao detectar o ciclo, fica com o candidato de maior TAXA FIXA entre
+    // os já vistos: mais seguro pro vendedor, porque se a taxa real
+    // acabar sendo menor (ou zero), ele ganha uma margem melhor que a
+    // mostrada — nunca pior. Comparar os PREÇOS resultantes não seria
+    // confiável aqui: somar a taxa fixa ao numerador pode empurrar o
+    // preço sugerido de volta pra BAIXO do próprio limiar que a
+    // justificaria, então preço maior não indica sempre "mais taxa fixa".
+    const MAX_ITERATIONS = 8;
     let priceEstimate = roughPriceEstimate(values, shippingCost);
     let realListingPrices = null;
     let shippingResult = null;
-    let previousCandidate = null; // { price, fees, shipping }
+    const seenAtRoundedPrice = new Map(); // roundedPrice -> { fees, shipping, fixedFee }
+    let finalRoundedPrice = null;
 
     for (let i = 0; i < MAX_ITERATIONS; i++) {
       const roundedPrice = Math.max(1, Math.round(priceEstimate));
+
+      if (seenAtRoundedPrice.has(roundedPrice)) {
+        // Já consultamos esse preço arredondado antes nesta simulação —
+        // é um ciclo, não vai convergir sozinho. Entre todos os preços já
+        // vistos, fica com o de maior taxa fixa.
+        finalRoundedPrice = roundedPrice;
+        for (const [rp, candidate] of seenAtRoundedPrice) {
+          if (candidate.fixedFee > seenAtRoundedPrice.get(finalRoundedPrice).fixedFee) finalRoundedPrice = rp;
+        }
+        break;
+      }
 
       const [feeData, shipData] = await Promise.all([
         needsCategory ? fetchRealMlFees(roundedPrice) : Promise.resolve(null),
@@ -1292,31 +1319,36 @@ form.addEventListener("submit", async (event) => {
 
       const trialFees = needsCategory ? buildFeesWithRealMlData(realListingPrices) : MARKETPLACE_FEES;
       const trialShipping = shippingResult ? shippingResult.seller_cost || 0 : shippingCost;
+      const trialFixedFee = needsCategory ? (trialFees[0]?.fixedFee ?? 0) : 0;
       const trialPrice = resolveEntryPricing(trialFees[0], values, trialShipping).suggestedPrice;
       shippingCost = trialShipping;
 
+      seenAtRoundedPrice.set(roundedPrice, { fees: realListingPrices, shipping: shippingResult, fixedFee: trialFixedFee });
+
       const stabilized = Math.abs(trialPrice - priceEstimate) < 0.5;
-      if (stabilized) {
-        priceEstimate = trialPrice;
-        break;
-      }
-
-      if (previousCandidate && Math.abs(trialPrice - previousCandidate.price) < 0.5) {
-        // Oscilando entre dois valores — não vai convergir. Fica com o
-        // candidato de maior preço (mais seguro, ver comentário acima) e
-        // NÃO consulta de novo (isso só voltaria a oscilar).
-        const currentCandidate = { price: trialPrice, fees: realListingPrices, shipping: shippingResult };
-        const safer = currentCandidate.price >= previousCandidate.price ? currentCandidate : previousCandidate;
-        priceEstimate = safer.price;
-        realListingPrices = safer.fees;
-        shippingResult = safer.shipping;
-        shippingCost = safer.shipping ? safer.shipping.seller_cost || 0 : shippingCost;
-        break;
-      }
-
-      previousCandidate = { price: priceEstimate, fees: realListingPrices, shipping: shippingResult };
       priceEstimate = trialPrice;
+      if (stabilized) {
+        finalRoundedPrice = roundedPrice;
+        break;
+      }
     }
+
+    if (finalRoundedPrice == null) {
+      // Não estabilizou nem fechou um ciclo dentro do limite de
+      // iterações (não deveria acontecer na prática) — usa o último
+      // preço consultado mesmo assim, em vez de travar.
+      finalRoundedPrice = [...seenAtRoundedPrice.keys()].pop();
+    }
+
+    const finalCandidate = seenAtRoundedPrice.get(finalRoundedPrice);
+    realListingPrices = finalCandidate.fees;
+    shippingResult = finalCandidate.shipping;
+    shippingCost = finalCandidate.shipping ? finalCandidate.shipping.seller_cost || 0 : shippingCost;
+    // Recalcula o preço final a partir das taxas do candidato escolhido —
+    // garante que o preço exibido é sempre o resultado da fórmula com
+    // ESSAS taxas (nunca um valor de uma rodada anterior/posterior).
+    const finalTrialFees = needsCategory ? buildFeesWithRealMlData(realListingPrices) : MARKETPLACE_FEES;
+    priceEstimate = resolveEntryPricing(finalTrialFees[0], values, shippingCost).suggestedPrice;
 
     submitBtn.disabled = false;
     submitBtn.textContent = submitBtnDefaultText;
