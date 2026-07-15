@@ -2,29 +2,32 @@
 
 Última atualização: 15/07/2026 (Magalu como 5º marketplace, correção de altura dos cartões,
 correção da taxa fixa do ML perto do limiar de R$12,50, migração de infraestrutura pra
-conta/organização da empresa no Vercel e GitHub, e reconexão do deploy automático — ver
-seção 29).
+conta/organização da empresa no Vercel e GitHub, verificação da taxa fixa contra a API real,
+transparência de modalidade de frete, e fechamento da migração — deploy automático reconectado
+e `ML_REDIRECT_URI` atualizado — ver seções 29 e 30).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
-## Ambiente: EM PRODUÇÃO desde 13/07/2026
+## Ambiente: EM PRODUÇÃO — domínio da empresa desde 15/07/2026
 
-`https://qual-o-preco-rs-v2.vercel.app` está no ar com o código atual (login, admin,
-perfil, redesenho visual, integração ML por usuário, todas as correções de segurança e
-precificação desta sessão). Antes dessa data, o que estava publicado ali era uma versão
-bem antiga (anterior à reescrita do login e da integração por usuário) — várias sessões
-de trabalho ficaram só locais até agora.
+**URL oficial atual:** `https://qualopreco.rssolucoesdigitais.com.br` — projeto Vercel da
+conta/organização da empresa (`qual-o-preco-rs`, time `consultoriarssolucoesdigitais-9688`),
+repositório `github.com/RS-Vibecode/qual-o-preco-rs` (privado). Deploy automático a cada push
+no `main` (reconectado em 15/07/2026 — ver seção 30; antes disso, precisava de deploy manual).
+
+Antes de 15/07/2026, o ambiente oficial era `qual-o-preco-rs-v2.vercel.app` (conta pessoal) —
+esse projeto ainda existe mas está sendo descontinuado (ver pendência #2 em "Onde paramos"
+abaixo); não usar mais como referência.
 
 **Importante pra depuração futura:** o fluxo de login (`/api/auth/*`) funciona tanto local
 quanto em produção, mas o **fluxo de conexão com o Mercado Livre não funciona testado
 localmente** — o Mercado Livre exige uma `redirect_uri` fixa e pública (HTTPS, cadastrada
-no DevCenter), que está configurada como a URL de produção. Ou seja: `/api/auth/start`
-sempre manda o usuário de volta para `qual-o-preco-rs-v2.vercel.app/api/auth/callback`,
-mesmo iniciando o fluxo em `localhost`. Login feito localmente + conexão ML (que volta em
-produção) são origens diferentes — cookies de sessão não valem entre elas, o que causava
-"cai de volta no login" e erros de `invalid_grant` (ver seção 10 abaixo). **Pra testar
-conexão com o Mercado Livre, sempre use a URL de produção do início ao fim, nunca
-localhost.**
+no DevCenter), configurada hoje como `https://qualopreco.rssolucoesdigitais.com.br/api/auth/callback`
+(regravada em 15/07/2026 — ver seção 30; ainda falta confirmar que o DevCenter do ML tem o
+mesmo valor). Login feito localmente + conexão ML (que sempre volta pra produção) são origens
+diferentes — cookies de sessão não valem entre elas, o que causava "cai de volta no login" e
+erros de `invalid_grant` (ver seção 10 abaixo). **Pra testar conexão com o Mercado Livre,
+sempre use a URL de produção do início ao fim, nunca localhost.**
 
 Pra religar o servidor local (só serve pra testar UI/precificação/admin — não pra testar
 conexão ML):
@@ -775,6 +778,53 @@ qualquer preço nessa faixa deveria ter uma taxa fixa considerável.
   (`qual-o-preco-rs-v2.vercel.app`) depois que o novo estiver confirmado — **não apagar antes
   de testar o novo de ponta a ponta** (login, cálculo, conexão ML).
 
+### 30. Verificação da taxa fixa do ML, transparência de modalidade de frete, e fechamento da migração de infraestrutura (15/07/2026)
+
+Cliente reportou "taxa fixa R$0,00" num produto de R$60,87 e insistiu numa estrutura de
+degraus (R$6,25/6,50/6,75 até R$79) que tinha visto em conteúdo de terceiros — pedido pra
+testar rigorosamente e corrigir se estivesse errado.
+
+- **Verificação ao vivo**: 100 consultas reais à API (`GET /sites/MLB/listing_prices`), 5
+  categorias diferentes, incluindo o preço exato reportado. Resultado: taxa fixa real da API é
+  R$0,00 em toda a faixa acima de R$12,50, em 100% dos pontos — a alegação dos degraus bate só
+  por coincidência (30/100, todos onde as duas regras concordam). Artefato com metodologia,
+  evidências e dados publicado pra explicar o achado.
+- **A alegação dos degraus não era inventada** — pesquisa web confirmou que essa estrutura
+  existiu de verdade até fevereiro de 2026, e foi substituída em **2 de março de 2026** por um
+  custo logístico variável (peso, dimensões, faixa de preço — 29×8 = 232 combinações),
+  aplicado ao frete do Mercado Envios, não à taxa fixa de venda. Não há confirmação de qual
+  lado da conta (venda ou frete) os R$6,25/6,50/6,75 ocupavam antes da mudança.
+- **Código já estava certo, mas melhorado**: a taxa fixa já vinha só da API real (nunca uma
+  tabela cadastrada), confirmado lendo o código antes de mexer — não precisou de correção. O
+  que faltava era mostrar a **modalidade de frete** usada em cada cálculo, que era consultada
+  mas nunca exibida (`shippingSourceLabel()`, novo, em `script.js`): agora o popup de cada
+  marketplace mostra se o frete foi informado manualmente, qual modalidade real a API do ML
+  retornou, ou se nenhum custo foi aplicado — nunca mais fica implícito.
+- **Bug de layout corrigido**: o nome "TikTok Shop" quebrava em duas linhas no cabeçalho do
+  chip de marketplace (nomes mais longos não cabiam ao lado do selo "NÃO INCLUÍDO" e do
+  chevron), desalinhando com os outros chips. Ajustado o espaçamento do cabeçalho
+  (`.marketplace-chip__head`) e adicionado truncamento com reticências como rede de segurança.
+  Também corrigido texto cortado nos selects de Amazon/Magalu (placeholder longo demais
+  colidindo com a seta nativa do `<select>`) — textos encurtados.
+- **Migração de infraestrutura fechada** (ver pendências da seção 29):
+  - **Causa raiz encontrada pro deploy automático não funcionar**: o link Git do projeto na
+    Vercel ainda apontava pro nome antigo da organização (`rssolucoesdigitais`), quebrado
+    desde a renomeação pra `RS-Vibecode` (erro "Project Link not found" na tela de
+    Settings → Git). Reconectado pelo painel da Vercel (Reconnect → selecionar a organização
+    `RS-Vibecode` → repositório `qual-o-preco-rs`). **Testado e confirmado**: um commit normal
+    (sem eu rodar deploy manual) já publicou sozinho em produção depois da reconexão.
+  - **`ML_REDIRECT_URI` regravado** na Vercel para `https://qualopreco.rssolucoesdigitais.com.br/api/auth/callback`
+    (a variável está marcada como "Sensitive" — nem o cliente nem eu conseguíamos ler o valor
+    anterior pra conferir, então foi regravado direto por cima, seguro de qualquer forma).
+    Publicado em produção. **Ainda falta**: confirmar que o mesmo valor está cadastrado no
+    DevCenter do Mercado Livre (só o cliente tem acesso a essa tela) — a confirmação
+    definitiva dos dois lados juntos só acontece testando uma conexão real ("Conectar Mercado
+    Livre" em Configurações); se o DevCenter estiver errado, o Mercado Livre recusa
+    imediatamente com um erro claro, o que também serve de diagnóstico.
+
+Tudo testado antes de publicar (unidade da função de rótulo de frete, captura visual do chip
+em claro/escuro/mobile) e confirmado ao vivo em produção depois.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
@@ -782,31 +832,35 @@ deploy em produção, Amazon + Shopee + TikTok Shop + Magalu como marketplaces d
 área de Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a
 busca de produtos cadastrados, a reserva de marketing, as Fases A e B da repaginação (formulário
 da calculadora e painel admin), os logos oficiais dos marketplaces, a correção de altura dos
-cartões e a correção da taxa fixa do ML — tudo testado, publicado em produção (site antigo).
-Falta:
+cartões, a correção da taxa fixa do ML, a transparência de modalidade de frete, e o fechamento
+da migração de infraestrutura (deploy automático reconectado, `ML_REDIRECT_URI` atualizado) —
+tudo testado, publicado em produção no domínio novo (`qualopreco.rssolucoesdigitais.com.br`).
+README.md também atualizado (seção de marketplaces, fórmula com reserva/imposto, integração ML,
+identidade visual, limitações). Falta:
 
-1. **Terminar a migração de infraestrutura** (ver seção 29 acima) — confirmar que o deploy no
-   projeto novo da empresa sai do estado "Blocked", atualizar `ML_REDIRECT_URI` pro domínio
-   novo (Vercel + DevCenter do ML), testar tudo de ponta a ponta lá antes de considerar o
-   projeto antigo dispensável.
-2. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
+1. **Confirmar uma conexão real do Mercado Livre no domínio novo** — o valor da Vercel já foi
+   regravado (ver seção 30), mas só um teste de ponta a ponta ("Conectar Mercado Livre" em
+   Configurações) confirma que o DevCenter do ML está com a mesma URL cadastrada. Pendente de
+   alguém clicar nesse fluxo.
+2. **Decidir o destino do projeto/domínio antigo** (`qual-o-preco-rs-v2.vercel.app`) — só
+   depois do item 1 confirmado.
+3. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
    perfil já estão bons, não deve precisar de reestruturação, só ajustes finos de consistência.
-3. **Guia de categorias do ML pra equipe**: cliente pediu uma forma de a equipe saber que tipo
+4. **Guia de categorias do ML pra equipe**: cliente pediu uma forma de a equipe saber que tipo
    de produto entra em cada categoria ao usar a busca da calculadora. Direção proposta (ainda
    não implementada): mostrar o caminho completo da categoria (ex.: "Eletrônicos, Áudio e
    Vídeo > Áudio > Fones de Ouvido") quando uma é selecionada, não só o nome final — confirmado
    que a API pública do ML (`GET /categories/{id}`, campo `path_from_root`) tem esse dado
    pronto, sem precisar de autenticação.
-4. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
+5. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
    do painel do vendedor, eu confiro e cadastro em `marketplace_rates`.
-5. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
-   verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
-   com o painel oficial deles antes dessa data.
 6. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
 7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-8. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   a reserva de marketing, nem a repaginação visual (seções 19-29) — vale atualizar numa
-   próxima passada de documentação.
+8. **Sugestão nova, ainda não implementada**: testes automatizados mínimos salvos no
+   repositório (a maioria dos bugs sérios até aqui foi matemática sutil — oscilação perto de
+   R$12,50, regra da Shopee abaixo de R$8, mistura de percentual da Amazon acima de um
+   limiar). Um punhado de testes fixos da fórmula de precificação protegeria contra
+   reintroduzir esse tipo de erro silenciosamente no futuro.
