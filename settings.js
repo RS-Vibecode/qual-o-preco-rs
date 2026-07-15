@@ -48,6 +48,9 @@ async function initMlConnectBanner() {
 }
 
 document.getElementById("mlDisconnectBtn")?.addEventListener("click", async () => {
+  if (!window.confirm("Desconectar sua conta do Mercado Livre? A calculadora volta a usar taxas de referência em vez dos valores reais até você conectar de novo.")) {
+    return;
+  }
   const disconnectBtn = document.getElementById("mlDisconnectBtn");
   disconnectBtn.disabled = true;
   try {

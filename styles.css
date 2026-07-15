@@ -2744,7 +2744,12 @@ dialog.card-modal::backdrop {
   line-height: 1.6;
 }
 
-.admin-created-result {
+/* .save-success é o mesmo cartão verde de confirmação, com um nome
+   genérico pra usos fora do painel admin (ex.: profile.html) — o admin
+   continua com .admin-created-result por causa dos elementos-filho
+   (__field/__label/__value) que só fazem sentido revelando e-mail/senha. */
+.admin-created-result,
+.save-success {
   margin-top: var(--space-5);
   padding: var(--space-4);
   border-radius: var(--radius-sm);
@@ -2754,7 +2759,8 @@ dialog.card-modal::backdrop {
   flex-direction: column;
   gap: var(--space-4);
 }
-.admin-created-result__title {
+.admin-created-result__title,
+.save-success__title {
   font-weight: 700;
   color: var(--green);
 }

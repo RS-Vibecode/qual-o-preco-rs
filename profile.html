@@ -64,28 +64,40 @@
 
 <main class="admin-page">
   <div class="page-container">
-    <section class="card reveal" aria-labelledby="profile-title">
-      <p class="page-eyebrow">Sua conta</p>
-      <h1 id="profile-title" class="card__title">Meu perfil</h1>
 
-      <div class="profile-photo-row">
-        <div class="profile-photo" id="photoPreviewWrap">
-          <img id="photoPreviewImg" alt="" hidden />
-          <span id="photoPreviewInitial"></span>
+    <div class="admin-page__intro reveal">
+      <p class="page-eyebrow">Sua conta</p>
+      <h1 class="admin-page__title">Meu perfil</h1>
+      <p class="admin-page__subtitle">Seus dados aparecem no cabeçalho da ferramenta e em qualquer lugar que mostre quem fez uma ação.</p>
+    </div>
+
+    <section class="card reveal" aria-labelledby="profile-title">
+      <h2 id="profile-title" class="card__title">Dados pessoais</h2>
+
+      <div class="field">
+        <div class="field__label-row">
+          <label id="photoInputLabel-text">Foto de perfil</label>
+          <span class="field-tooltip">
+            <button type="button" class="field-tooltip__btn" id="photo-tip-btn" aria-expanded="false" aria-controls="photo-help" aria-label="Mais informações sobre a foto de perfil">?</button>
+            <span class="field-tooltip__bubble" id="photo-help" role="tooltip">JPG, PNG ou WebP, até 3MB.</span>
+          </span>
         </div>
-        <div>
+        <div class="profile-photo-row">
+          <div class="profile-photo" id="photoPreviewWrap">
+            <img id="photoPreviewImg" alt="" hidden />
+            <span id="photoPreviewInitial"></span>
+          </div>
           <div class="profile-photo-actions">
-            <label class="btn btn--secondary" for="photoInput">Trocar foto</label>
+            <label class="btn btn--secondary" for="photoInput" tabindex="0" id="photoInputLabel">Trocar foto</label>
             <button type="button" class="btn btn--secondary" id="removePhotoBtn">Remover foto</button>
           </div>
           <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden />
-          <p class="field__help">JPG, PNG ou WebP, até 3MB.</p>
         </div>
       </div>
 
       <p class="auth-card__form-error" id="form-error" role="alert" hidden></p>
-      <p class="admin-created-result" id="successMsg" hidden>
-        <span class="admin-created-result__title">Perfil atualizado!</span>
+      <p class="save-success" id="successMsg" hidden>
+        <span class="save-success__title">Perfil atualizado!</span>
       </p>
 
       <form id="profile-form" novalidate>
@@ -111,11 +123,16 @@
         </div>
 
         <div class="field">
-          <label for="email">E-mail</label>
+          <div class="field__label-row">
+            <label for="email">E-mail</label>
+            <span class="field-tooltip">
+              <button type="button" class="field-tooltip__btn" id="email-tip-btn" aria-expanded="false" aria-controls="email-help" aria-label="Mais informações sobre o e-mail">?</button>
+              <span class="field-tooltip__bubble" id="email-help" role="tooltip">Esse é o e-mail usado pra entrar na ferramenta.</span>
+            </span>
+          </div>
           <div class="input-wrap">
             <input type="email" id="email" name="email" autocomplete="email" />
           </div>
-          <p class="field__help">Esse é o e-mail usado pra entrar na ferramenta.</p>
         </div>
 
         <div class="form-actions">

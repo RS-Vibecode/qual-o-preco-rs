@@ -1,5 +1,44 @@
 "use strict";
 
+/* ---- Tooltips de campo (mesmo comportamento de calc-form-ui.js,
+   reimplementado aqui porque essa página não carrega o script da
+   calculadora — só clique pra abrir/fechar; o conteúdo já está sempre no
+   DOM via aria-describedby, então não afeta leitor de tela). ---- */
+const tooltipButtons = Array.from(document.querySelectorAll(".field-tooltip__btn"));
+
+function closeAllTooltips(except) {
+  tooltipButtons.forEach((btn) => {
+    if (btn === except) return;
+    btn.setAttribute("aria-expanded", "false");
+    document.getElementById(btn.getAttribute("aria-controls"))?.classList.remove("is-open", "align-right");
+  });
+}
+
+tooltipButtons.forEach((btn) => {
+  const bubble = document.getElementById(btn.getAttribute("aria-controls"));
+  if (!bubble) return;
+  btn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = btn.getAttribute("aria-expanded") === "true";
+    closeAllTooltips(btn);
+    btn.setAttribute("aria-expanded", String(!isOpen));
+    bubble.classList.toggle("is-open", !isOpen);
+
+    if (!isOpen) {
+      bubble.classList.remove("align-right");
+      const rect = bubble.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) {
+        bubble.classList.add("align-right");
+      }
+    }
+  });
+});
+
+document.addEventListener("click", () => closeAllTooltips());
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAllTooltips();
+});
+
 const form = document.getElementById("profile-form");
 const submitBtn = document.getElementById("profile-submit");
 const submitBtnDefaultText = submitBtn.textContent;
@@ -37,6 +76,17 @@ async function loadProfile() {
   currentName = data.fullName || data.email || "";
   setPhotoPreview(data.photoUrl, currentName);
 }
+
+// <label for="photoInput"> aciona o input de arquivo no clique (associação
+// nativa do HTML), mas um <label> não recebe Enter/Espaço de teclado como
+// um <button> recebe — só o tabindex acima não é suficiente. Sem isso, o
+// rótulo aparece na navegação por Tab mas não faz nada ao ativar.
+document.getElementById("photoInputLabel")?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    photoInput.click();
+  }
+});
 
 photoInput.addEventListener("change", () => {
   const file = photoInput.files[0];
