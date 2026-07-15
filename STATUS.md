@@ -1,8 +1,9 @@
 # Status do projeto — onde paramos
 
 Última atualização: 15/07/2026 (Magalu como 5º marketplace, correção de altura dos cartões,
-correção da taxa fixa do ML perto do limiar de R$12,50, e início da migração de
-infraestrutura pra conta/organização da empresa no Vercel e GitHub).
+correção da taxa fixa do ML perto do limiar de R$12,50, migração de infraestrutura pra
+conta/organização da empresa no Vercel e GitHub, e reconexão do deploy automático — ver
+seção 29).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
