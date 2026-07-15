@@ -128,19 +128,26 @@ function calculatePricing({ productCost, extraCosts, marketplacePct, fixedFee, m
 
 /**
  * Taxa fixa de referência (só usada quando NÃO há taxa real da API — sem
- * categoria selecionada, ou consulta indisponível).
+ * categoria selecionada, ou consulta indisponível). Nunca usada como valor
+ * final quando há categoria selecionada — nesse caso o valor vem sempre de
+ * resolveFeesForEntry("ml-real"), direto da resposta da API a cada cálculo
+ * (ver buildFeesWithRealMlData), nunca de uma tabela fixa.
  *
  * Confirmado ao vivo contra a própria API do Mercado Livre
- * (GET /sites/MLB/listing_prices), autenticado, em 10/07/2026, testado em
- * 6 categorias bem diferentes (celulares, batom, tênis, furadeira,
- * camiseta, fone) nos dois tipos de anúncio: a taxa fixa é ~50% do preço
- * para vendas de até R$12,50, e ZERO acima disso — não R$6,00 fixo, e não
- * há degrau em R$79 (esse número aparece em vários blogs de terceiros,
- * mas não bateu com a API real em nenhuma categoria testada; pode ser
- * confusão com o limiar de frete grátis obrigatório, que é uma regra
- * diferente). Limitação: testado numa amostra de categorias, não em
- * todas — com categoria selecionada, a ferramenta sempre usa o valor real
- * da API em vez desta estimativa.
+ * (GET /sites/MLB/listing_prices), autenticado, em 10/07/2026 e novamente
+ * em 15/07/2026 (100 consultas, 5 categorias bem diferentes): a taxa fixa
+ * é ~50% do preço para vendas de até R$12,50, e ZERO acima disso, em toda
+ * categoria testada, hoje.
+ *
+ * Isso não invalida a tarifa em degraus de R$6,25/6,50/6,75 até R$79 que
+ * circula em vários lugares — ela existiu de fato até fev/2026 e foi
+ * substituída por um custo logístico variável (peso/dimensão/preço, ~232
+ * combinações) a partir de 2 de março de 2026. Não temos confirmação de
+ * qual lado da conta (venda ou frete) ela ocupava antes da mudança — só
+ * que hoje, no campo "taxa fixa de venda" da API, o valor é este. Se o ML
+ * mudar de novo, esta estimativa fica desatualizada até um novo teste —
+ * por isso ela SÓ serve de ponto de partida da iteração, nunca do valor
+ * final mostrado quando há categoria selecionada.
  */
 function estimateReferenceFixedFee(price) {
   if (!Number.isFinite(price) || price <= 0) return 0;
@@ -568,6 +575,30 @@ function buildProfitCallout(r) {
   return box;
 }
 
+/**
+ * Rótulo explicando de onde veio o custo de frete mostrado — nunca deixa
+ * implícito que é "Full" ou qualquer modalidade específica: mostra
+ * exatamente a modalidade que a API do Mercado Livre devolveu (methodName,
+ * ex.: "Mercado Envios Full", "Mercado Envios Flex", "Coleta"...), ou deixa
+ * claro que foi informado manualmente, ou que nenhum custo logístico do ML
+ * foi aplicado (sem dado suficiente pra consultar) — nunca assume um valor
+ * fixo por modalidade.
+ */
+function shippingSourceLabel(shippingMeta) {
+  if (!shippingMeta || shippingMeta.source === "none") {
+    return " · nenhum custo logístico do ML aplicado (frete não informado)";
+  }
+  if (shippingMeta.source === "manual") {
+    return " · informado manualmente pelo vendedor";
+  }
+  if (shippingMeta.source === "ml-api") {
+    return shippingMeta.methodName
+      ? ` · modalidade consultada agora na API do ML: ${shippingMeta.methodName}`
+      : " · consulta real à API do ML";
+  }
+  return "";
+}
+
 /** Cartão completo (barra proporcional, legenda, grade de detalhes e
  * observação) — usado dentro do popup, construído sob demanda no clique
  * (ver openCardModal) em vez de ficar sempre no DOM da grade. */
@@ -583,7 +614,7 @@ function buildFullCard(entry, r, meta) {
   details.append(
     detailRow("Comissão", `${formatPercent(r.commissionPct)} · ${formatBRL(r.commissionValue)}`),
     detailRow("Taxa fixa", formatBRL(r.fixedFeeValue)),
-    detailRow("Frete (vendedor)", formatBRL(r.shippingCostValue))
+    detailRow("Frete (vendedor)", `${formatBRL(r.shippingCostValue)}${shippingSourceLabel(meta.shippingMeta)}`)
   );
   if (r.marketingReserveValue > 0) {
     details.append(detailRow("Reserva p/ marketing", `${formatPercent(r.marketingReservePct)} · ${formatBRL(r.marketingReserveValue)}`));
@@ -624,7 +655,7 @@ cardModal?.addEventListener("click", (event) => {
   if (event.target === cardModal) cardModal.close();
 });
 
-function renderAllMarketplaces(values, feesList, shippingCost = 0) {
+function renderAllMarketplaces(values, feesList, shippingCost = 0, shippingMeta = { source: "none" }) {
   if (typeof MARKETPLACE_FEES === "undefined") return;
   const fees = feesList || MARKETPLACE_FEES;
 
@@ -650,7 +681,7 @@ function renderAllMarketplaces(values, feesList, shippingCost = 0) {
     const rank = index + 1;
     const isBest = toCents(r.suggestedPrice) === cheapestCents;
     const stagger = index * 70;
-    const meta = { rank, isBest, tiedCount };
+    const meta = { rank, isBest, tiedCount, shippingMeta };
 
     // Cartão compacto: só o essencial (posição, selo, nome, preço) — o
     // resto (comissão, taxa fixa, lucro, barra proporcional) fica no
@@ -1252,6 +1283,10 @@ form.addEventListener("submit", async (event) => {
   const manualShipping = getManualShippingCost();
   const pkg = manualShipping === null ? getPackageDimensions() : null; // manual tem prioridade
   let shippingCost = manualShipping ?? 0;
+  // Nunca assume uma modalidade (Full, Flex, Correios...) — só registra de
+  // onde o número realmente veio, pra mostrar isso com transparência no
+  // popup em vez de deixar o custo de frete como uma caixa-preta.
+  let shippingMeta = manualShipping !== null ? { source: "manual" } : { source: "none" };
 
   const needsCategory = !!selectedCategory;
   const needsShipping = manualShipping === null && !!pkg;
@@ -1344,6 +1379,13 @@ form.addEventListener("submit", async (event) => {
     realListingPrices = finalCandidate.fees;
     shippingResult = finalCandidate.shipping;
     shippingCost = finalCandidate.shipping ? finalCandidate.shipping.seller_cost || 0 : shippingCost;
+    if (needsShipping && shippingResult) {
+      // methodName vem direto da resposta da API (cheapest.name em
+      // /api/ml-shipping.js) — é o que o próprio ML classificou como a
+      // modalidade mais barata pra essa conta/pacote, nunca um valor
+      // presumido por nós (Full, Flex etc.).
+      shippingMeta = { source: "ml-api", methodName: shippingResult.method_name || null };
+    }
     // Recalcula o preço final a partir das taxas do candidato escolhido —
     // garante que o preço exibido é sempre o resultado da fórmula com
     // ESSAS taxas (nunca um valor de uma rodada anterior/posterior).
@@ -1378,7 +1420,7 @@ form.addEventListener("submit", async (event) => {
     if (tiktokEntry) feesToUse = [...feesToUse, tiktokEntry];
   }
 
-  renderAllMarketplaces(values, feesToUse, shippingCost);
+  renderAllMarketplaces(values, feesToUse, shippingCost, shippingMeta);
 });
 
 fieldConfig.forEach((cfg) => {
