@@ -853,7 +853,7 @@ body.auth-pending main {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: #FFFFFF;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
   padding: 5px;
@@ -1825,7 +1825,6 @@ body.auth-pending main {
    igual em todos (markup sobre o custo), então o que diferencia cada
    cartão de verdade é esse preço. */
 .compare-intro {
-  text-align: center;
   margin-bottom: var(--space-6);
 }
 .compare-intro__title {
@@ -1840,7 +1839,6 @@ body.auth-pending main {
   font-size: 0.9rem;
   color: var(--text-2);
   max-width: 480px;
-  margin: 0 auto;
   line-height: 1.6;
 }
 
@@ -2151,7 +2149,7 @@ dialog.card-modal::backdrop {
   width: 26px;
   height: 26px;
   flex-shrink: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #FFFFFF;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
   padding: 4px;
@@ -2314,6 +2312,7 @@ dialog.card-modal::backdrop {
   gap: var(--space-2);
   padding: var(--space-7) var(--space-5);
   text-align: center;
+  background: var(--bg-2);
   border-top: 1px solid var(--border-soft);
 }
 .site-footer__logo {
@@ -2656,7 +2655,10 @@ dialog.card-modal::backdrop {
   gap: 2px;
   padding: var(--space-3) var(--space-5);
   background: var(--card-bg);
-  border: 1px solid var(--border-soft);
+  /* Mesma profundidade do .card (sombra suave, não borda lisa) — cantos
+     orgânicos de 32px ficariam desproporcionais num cartão deste tamanho,
+     então mantém --radius-md, só troca a borda pela sombra compartilhada. */
+  box-shadow: var(--shadow-card);
   border-radius: var(--radius-md);
   backdrop-filter: blur(16px);
   min-width: 150px;
@@ -2678,6 +2680,14 @@ dialog.card-modal::backdrop {
 /* ---- Busca/filtro client-side acima de uma tabela do admin ---- */
 .table-search {
   margin-top: var(--space-4);
+}
+/* Aparece só durante a busca inicial dos dados — sem isso a área da
+   tabela ficava um vão vazio entre o campo de busca e as linhas
+   aparecerem, sem nenhum aviso do que estava acontecendo. */
+.admin-table__loading {
+  margin-top: var(--space-4);
+  font-size: 0.9rem;
+  color: var(--text-2);
 }
 .table-search input {
   width: 100%;
@@ -2763,6 +2773,13 @@ dialog.card-modal::backdrop {
 .save-success__title {
   font-weight: 700;
   color: var(--green);
+}
+/* Dentro do popup de credencial (#credentialModal), .admin-created-result
+   é o único conteúdo — o espaço de respiro já vem do padding do próprio
+   modal, então a margem de topo (pensada pra separar de um formulário
+   acima, no fluxo normal da página) sobraria como um vão vazio extra. */
+.card-modal__content > .admin-created-result {
+  margin-top: 0;
 }
 .admin-created-result__field {
   display: flex;

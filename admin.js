@@ -28,10 +28,6 @@ function createIcon(pathD) {
 const createForm = document.getElementById("create-user-form");
 const createSubmitBtn = document.getElementById("create-user-submit");
 const createSubmitDefaultText = createSubmitBtn.textContent;
-const createdResult = document.getElementById("createdResult");
-const createdEmailEl = document.getElementById("createdEmail");
-const createdPasswordEl = document.getElementById("createdPassword");
-const copyPasswordBtn = document.getElementById("copyPasswordBtn");
 const newUserPasswordInput = document.getElementById("newUserPassword");
 const toggleNewUserPasswordBtn = document.getElementById("toggleNewUserPasswordBtn");
 const newUserPasswordSlash = document.getElementById("newUserPasswordSlash");
@@ -39,11 +35,47 @@ const generatePasswordBtn = document.getElementById("generatePasswordBtn");
 const usersTable = document.getElementById("usersTable");
 const usersTableBody = document.getElementById("usersTableBody");
 const usersEmpty = document.getElementById("usersEmpty");
-const resetResult = document.getElementById("resetResult");
-const resetEmailEl = document.getElementById("resetEmail");
-const resetPasswordEl = document.getElementById("resetPassword");
-const copyResetPasswordBtn = document.getElementById("copyResetPasswordBtn");
 const usersActionError = document.getElementById("usersActionError");
+
+/* ---------------------------------------------------------
+   Popup de credencial (senha de usuário criado ou redefinida) — um único
+   <dialog> reaproveitado pros dois casos (ver admin.html), no mesmo
+   padrão de popup real já usado pro cartão de detalhe em index.html
+   (script.js: openCardModal). Antes eram dois <div> que só apareciam
+   dentro do fluxo normal da página, sem fechar com Esc/clique fora — não
+   ideal pra um segredo de uso único que a pessoa não pode perder de vista
+   sem querer.
+   --------------------------------------------------------- */
+const credentialModal = document.getElementById("credentialModal");
+const credentialTitleEl = document.getElementById("credentialTitle");
+const credentialEmailEl = document.getElementById("credentialEmail");
+const credentialPasswordEl = document.getElementById("credentialPassword");
+const copyCredentialBtn = document.getElementById("copyCredentialBtn");
+
+function showCredentialModal(title, email, password) {
+  credentialTitleEl.textContent = title;
+  credentialEmailEl.textContent = email;
+  credentialPasswordEl.textContent = password;
+  credentialModal.showModal();
+}
+
+document.getElementById("credentialModalClose")?.addEventListener("click", () => credentialModal.close());
+credentialModal?.addEventListener("click", (event) => {
+  if (event.target === credentialModal) credentialModal.close();
+});
+
+copyCredentialBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(credentialPasswordEl.textContent);
+    const original = copyCredentialBtn.textContent;
+    copyCredentialBtn.textContent = "Copiado!";
+    setTimeout(() => {
+      copyCredentialBtn.textContent = original;
+    }, 1500);
+  } catch {
+    // clipboard indisponível — sem quebrar o fluxo
+  }
+});
 
 // /api/auth/me não devolve o id (só dados de perfil) — usamos o e-mail
 // pra reconhecer "esta é a minha própria linha" e esconder o botão de
@@ -84,7 +116,6 @@ function formatDate(iso) {
 function clearActionMessages() {
   usersActionError.hidden = true;
   usersActionError.textContent = "";
-  resetResult.hidden = true;
 }
 
 let allUsers = [];
@@ -107,6 +138,7 @@ function filterUsers(query) {
 }
 
 function renderUsersTable(users) {
+  document.getElementById("usersLoading").hidden = true;
   usersTableBody.replaceChildren();
 
   if (!users.length) {
@@ -246,10 +278,7 @@ usersTableBody.addEventListener("click", async (event) => {
         usersActionError.hidden = false;
         return;
       }
-      resetEmailEl.textContent = email;
-      resetPasswordEl.textContent = data.password;
-      resetResult.hidden = false;
-      resetResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      showCredentialModal("Senha redefinida com sucesso!", email, data.password);
     } catch {
       usersActionError.textContent = "Erro de conexão. Tente novamente.";
       usersActionError.hidden = false;
@@ -257,19 +286,6 @@ usersTableBody.addEventListener("click", async (event) => {
       btn.disabled = false;
       btn.textContent = originalText;
     }
-  }
-});
-
-copyResetPasswordBtn.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(resetPasswordEl.textContent);
-    const original = copyResetPasswordBtn.textContent;
-    copyResetPasswordBtn.textContent = "Copiado!";
-    setTimeout(() => {
-      copyResetPasswordBtn.textContent = original;
-    }, 1500);
-  } catch {
-    // clipboard indisponível — sem quebrar o fluxo
   }
 });
 
@@ -316,7 +332,6 @@ createForm.addEventListener("submit", async (event) => {
   clearFieldError("fullName");
   clearFieldError("newUserEmail");
   clearFieldError("newUserPassword");
-  createdResult.hidden = true;
 
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("newUserEmail").value.trim();
@@ -358,31 +373,16 @@ createForm.addEventListener("submit", async (event) => {
       return;
     }
 
-    createdEmailEl.textContent = data.email;
-    createdPasswordEl.textContent = data.password;
-    createdResult.hidden = false;
     createForm.reset();
     newUserPasswordInput.type = "password";
     newUserPasswordSlash.hidden = false;
     loadUsers();
+    showCredentialModal("Usuário criado com sucesso!", data.email, data.password);
   } catch {
     setFieldError("newUserEmail", "Erro de conexão. Tente novamente.");
   } finally {
     createSubmitBtn.disabled = false;
     createSubmitBtn.textContent = createSubmitDefaultText;
-  }
-});
-
-copyPasswordBtn.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(createdPasswordEl.textContent);
-    const original = copyPasswordBtn.textContent;
-    copyPasswordBtn.textContent = "Copiado!";
-    setTimeout(() => {
-      copyPasswordBtn.textContent = original;
-    }, 1500);
-  } catch {
-    // clipboard indisponível — sem quebrar o fluxo
   }
 });
 
@@ -571,6 +571,7 @@ function filterRates(query) {
 }
 
 function renderRatesTable(rates) {
+  document.getElementById("ratesLoading").hidden = true;
   ratesTableBody.replaceChildren();
 
   if (!rates.length) {
