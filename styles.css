@@ -1886,7 +1886,8 @@ body.auth-pending main {
    ganhando — ver .brand--amazon etc. acima). Só o essencial (posição,
    selo, nome, preço) fica visível; o resto abre no popup ao tocar. */
 :where(.compare-card--compact) {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   border: none;
   background: none;
@@ -1896,6 +1897,15 @@ body.auth-pending main {
   cursor: pointer;
   appearance: none;
   padding: var(--space-5) var(--space-5) var(--space-4);
+}
+/* Grid não estica a altura entre linhas diferentes (cada linha se ajusta
+   só aos próprios itens) — sem isso, um cartão sozinho numa última linha
+   (nome curto, ex.: "Shopee") ficava visivelmente mais baixo que os da
+   linha de cima (nome longo, ex.: "Mercado Livre — Clássico", que
+   quebra em mais linhas). altura mínima fixa garante o mesmo tamanho
+   em qualquer posição da grade. */
+.compare-card--compact {
+  min-height: 256px;
 }
 .compare-card--compact:focus-visible {
   outline: 3px solid var(--blue);
@@ -1916,7 +1926,8 @@ body.auth-pending main {
 }
 .compare-card__hint {
   display: block;
-  margin-top: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-3);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
