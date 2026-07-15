@@ -682,6 +682,27 @@ Testado local (menu abre/fecha, clique fora e Esc fecham, link "Calculadora" só
 index.html, tooltips não cortam mais em nenhum dos dois casos reportados). Publicado em
 produção.
 
+### 26. Lucro líquido em destaque + imposto opcional/manual (14/07/2026)
+
+Cliente notou que "Lucro sobre custo" e "Margem líquida" pareciam a mesma coisa na grade de
+detalhes do popup — na real são duas contas diferentes (lucro÷custo vs. lucro÷preço final de
+venda), por isso os dois números sempre divergem, o que confundia sem uma explicação clara.
+
+- As duas linhas soltas viraram um **selo único destacado** ("Lucro líquido total", em reais,
+  grande, fundo verde suave) com os dois percentuais escritos por extenso logo abaixo — "X%
+  sobre o custo · Y% sobre o preço de venda" — em vez de dois rótulos ambíguos na grade.
+  `buildProfitCallout()` em `script.js`, só no popup (cartão completo), não na grade compacta.
+- **Novo campo opcional "Imposto"** (`taxPct`), preenchimento manual — a ferramenta não tem
+  como saber o regime tributário de cada vendedor. Mesmo padrão matemático já validado da
+  reserva de marketing (seção 21): entra no mesmo denominador da fórmula que a comissão do
+  marketplace, então o preço sobe o suficiente pra cobrir o imposto sem tirar nada do lucro
+  combinado — testado ao vivo: R$100 de custo/30% markup deu R$30,00 de lucro líquido tanto
+  sem imposto (preço R$149,43) quanto com 10% de imposto (preço R$168,83), só o preço mudou.
+  Aparece na barra proporcional (novo segmento índigo) e na grade de detalhes, só quando usado.
+
+Testado local (campo existe, lucro protegido com/sem imposto, linha "Imposto" na grade,
+segmento na barra, tema escuro). Publicado em produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
