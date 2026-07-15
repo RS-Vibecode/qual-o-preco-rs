@@ -1,9 +1,8 @@
 # Status do projeto — onde paramos
 
-Última atualização: 14/07/2026 (repaginação visual completa em andamento — Fases A e B
-concluídas: formulário da calculadora com chips de marketplace/accordion/tooltips/prévia ao
-vivo, painel admin com tabela de taxas compacta/busca/accordion, e logo oficial de cada
-marketplace nos chips e nos cartões de resultado).
+Última atualização: 15/07/2026 (Magalu adicionado como 5º marketplace de referência, e
+correção de cartões de resultado com altura inconsistente quando sobram sozinhos numa nova
+linha da grade).
 Este arquivo é um resumo de andamento pra retomar rápido; a documentação técnica
 permanente e detalhada de cada decisão está no `README.md`.
 
@@ -703,32 +702,56 @@ venda), por isso os dois números sempre divergem, o que confundia sem uma expli
 Testado local (campo existe, lucro protegido com/sem imposto, linha "Imposto" na grade,
 segmento na barra, tema escuro). Publicado em produção.
 
+### 27. Magalu como 5º marketplace de referência + correção de altura dos cartões (15/07/2026)
+
+- **Magalu**: pesquisei a API oficial (developers.magalu.com) antes de implementar — não existe
+  endpoint de simulação de taxa, só uma API de conciliação que retorna dados de pedidos JÁ
+  entregues/cancelados. Confirmado: é tabela de referência, igual Amazon/Shopee/TikTok Shop, não
+  consulta em tempo real. Diferente das outras, a comissão do Magalu varia principalmente pela
+  **forma de repasse** (parcelado 14,8% × à vista/antecipado 18%, conforme a diretoria de
+  e-commerce), não por categoria — reaproveita a mesma UI/schema da Amazon (`kind:
+  "amazon-tiered"` em script.js), só que o campo "categoria" virou "forma de repasse". Tarifa
+  fixa por item cadastrada como referência (R$7,50, média da faixa R$5-10 que varia por
+  categoria segundo o Portal do Seller). Logo baixado do CDN oficial (wx.mlcdn.com.br),
+  recolorido pra a cor de marca (#0E89FF). Cartão e chip seguem o mesmo padrão dos outros 4.
+- **Bug de altura corrigido**: com 6 marketplaces ativos, o cartão que sobra sozinho numa nova
+  linha da grade (ex.: Shopee) ficava visivelmente menor que os da linha de cima — CSS Grid
+  ajusta a altura de cada linha só pelos próprios itens dela, e um nome curto sozinho não tinha
+  um vizinho de nome longo (ex.: "Mercado Livre — Clássico") pra "esticar" a linha junto.
+  Corrigido com altura mínima fixa (256px) + "Ver detalhes" fixado embaixo do cartão
+  (flex column), garantindo o mesmo tamanho em qualquer posição da grade.
+
+Testado local (fluxo completo do Magalu, dados de Amazon/Shopee/TikTok confirmados intactos
+via API direta, 6 cartões com altura idêntica). Publicado em produção.
+
 ## Onde paramos / próximo passo em aberto
 
 Redesenho visual, integração de ML por usuário, revisão de segurança (duas rodadas), primeiro
-deploy em produção, Amazon + Shopee + TikTok Shop como marketplaces de referência, a área de
-Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a busca de
-produtos cadastrados, a reserva de marketing, as Fases A e B da repaginação (formulário da
-calculadora e painel admin) e os logos oficiais dos marketplaces — tudo testado, publicado em
-produção. Falta:
+deploy em produção, Amazon + Shopee + TikTok Shop + Magalu como marketplaces de referência, a
+área de Configurações, o popup de ML desconectado, senha escolhida na criação de usuário, a
+busca de produtos cadastrados, a reserva de marketing, as Fases A e B da repaginação (formulário
+da calculadora e painel admin), os logos oficiais dos marketplaces e a correção de altura dos
+cartões — tudo testado, publicado em produção. Falta:
 
-1. **Fase C da repaginação** — próximo passo imediato: polimento geral
-   (login/perfil/popups/componentes); login e perfil já estão bons, não deve precisar de
-   reestruturação, só ajustes finos de consistência.
-2. **Adicionar Magalu e Shein** — mesmo processo dos anteriores: você manda print da
-   tabela oficial de comissão do painel do vendedor de cada uma, eu confiro e cadastro em
-   `marketplace_rates` (a estrutura já suporta os formatos encontrados até agora: por
-   categoria, por faixa de preço, com/sem tarifa fixa).
-3. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
+1. **Migração de infraestrutura (Vercel + GitHub)**: o cliente avisou que vamos trocar pra
+   outro projeto Vercel e outro repositório GitHub, pra configurar o domínio próprio
+   direitinho. Ainda não tenho detalhes (novo domínio, se é conta nova ou só projeto novo,
+   se as variáveis de ambiente — Supabase, Redis/Upstash, credenciais do Mercado Livre —
+   precisam ser recriadas do zero ou só migradas). Pendente de mais informação antes de
+   começar; é uma mudança sensível (afeta o `redirect_uri` do OAuth do ML, que hoje está fixo
+   na URL de produção atual — ver nota no topo deste arquivo).
+2. **Fase C da repaginação** — polimento geral (login/perfil/popups/componentes); login e
+   perfil já estão bons, não deve precisar de reestruturação, só ajustes finos de consistência.
+3. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
+   do painel do vendedor, eu confiro e cadastro em `marketplace_rates`.
+4. **Lembrete de calendário**: a tarifa nova do TikTok Shop (10%/6% por faixa) só vale de
    verdade a partir de 15/07/2026 — nada a fazer agora, é só pra não estranhar se comparar
    com o painel oficial deles antes dessa data.
-4. Considerar um domínio próprio em vez de `qual-o-preco-rs-v2.vercel.app` (ainda não
-   configurado).
 5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
 6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
 7. README.md ainda não documenta a busca de produtos cadastrados, o campo de senha escolhida,
-   a reserva de marketing, nem a repaginação visual (seções 19-24) — vale atualizar numa
+   a reserva de marketing, nem a repaginação visual (seções 19-27) — vale atualizar numa
    próxima passada de documentação.
