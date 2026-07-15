@@ -852,14 +852,12 @@ identidade visual, limitações). Falta:
    Vídeo > Áudio > Fones de Ouvido") quando uma é selecionada, não só o nome final — confirmado
    que a API pública do ML (`GET /categories/{id}`, campo `path_from_root`) tem esse dado
    pronto, sem precisar de autenticação.
-5. **Adicionar Shein** — mesmo processo dos anteriores: print da tabela oficial de comissão
-   do painel do vendedor, eu confiro e cadastro em `marketplace_rates`.
-6. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
+5. A conta de teste do André Simões (`zanfaust@gmail.com`) não existe mais (foi removida em
    algum momento desta sessão) — se quiser voltar a testar com uma segunda conta real do
    Mercado Livre, precisa criar uma nova.
-7. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
+6. A página de Configurações hoje só tem a conexão com o Mercado Livre — é o lugar natural
    pra outras preferências de conta que vierem depois.
-8. **Sugestão nova, ainda não implementada**: testes automatizados mínimos salvos no
+7. **Sugestão nova, ainda não implementada**: testes automatizados mínimos salvos no
    repositório (a maioria dos bugs sérios até aqui foi matemática sutil — oscilação perto de
    R$12,50, regra da Shopee abaixo de R$8, mistura de percentual da Amazon acima de um
    limiar). Um punhado de testes fixos da fórmula de precificação protegeria contra

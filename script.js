@@ -736,12 +736,43 @@ function clearCategorySuggestions() {
   categoryInput.setAttribute("aria-expanded", "false");
 }
 
+/** Caminho completo da categoria (raiz até a escolhida), pra equipe
+ * entender que tipo de produto realmente cai ali — não só o nome final,
+ * que às vezes não deixa claro (ex.: duas categorias diferentes podem
+ * compartilhar uma palavra). Endpoint público do ML, via
+ * /api/ml-category-search?mode=path (ver esse arquivo). */
+async function fetchCategoryPath(categoryId) {
+  try {
+    const resp = await fetch(`/api/ml-category-search?mode=path&q=${encodeURIComponent(categoryId)}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return Array.isArray(data.path) && data.path.length ? data.path : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Busca o caminho e anexa uma linha extra no elemento de confirmação já
+ * exibido (categorySelectedEl ou productSelectedEl) — não substitui o
+ * texto existente, só complementa. Guarda contra a categoria ter mudado
+ * enquanto a busca estava em voo (troca rápida de seleção). */
+async function appendCategoryPathHint(el, categoryId) {
+  const path = await fetchCategoryPath(categoryId);
+  if (!selectedCategory || selectedCategory.id !== categoryId) return;
+  if (!path) return;
+  const pathLine = document.createElement("span");
+  pathLine.className = "category-selected__path";
+  pathLine.textContent = `Caminho completo: ${path.map((p) => p.name).join(" > ")}`;
+  el.appendChild(pathLine);
+}
+
 function selectCategory(id, name) {
   selectedCategory = { id, name };
   categoryInput.value = name;
   categorySelectedEl.textContent = `Categoria selecionada: ${name}`;
   categorySelectedEl.hidden = false;
   clearCategorySuggestions();
+  appendCategoryPathHint(categorySelectedEl, id);
 }
 
 function renderCategorySuggestions(results) {
@@ -842,6 +873,7 @@ function selectProduct(product) {
     productSelectedEl.textContent = `Produto selecionado: ${product.title} — categoria preenchida automaticamente. Este anúncio não tem peso/dimensões de embalagem cadastrados no Mercado Livre; preencha o frete manualmente abaixo, se quiser.`;
   }
   productSelectedEl.hidden = false;
+  appendCategoryPathHint(productSelectedEl, product.category_id);
 }
 
 function renderProductSuggestions(results) {

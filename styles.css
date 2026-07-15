@@ -1590,6 +1590,14 @@ body.auth-pending main {
   font-weight: 600;
   color: var(--green);
 }
+/* Linha extra com o caminho completo da categoria (raiz até a folha) —
+   discreta, não compete com a confirmação em verde acima dela. */
+.category-selected__path {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  color: var(--text-2);
+}
 
 .dimensions-row {
   display: flex;

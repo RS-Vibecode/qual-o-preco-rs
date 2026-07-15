@@ -1,4 +1,4 @@
-// Duas buscas relacionadas ao Mercado Livre, no mesmo arquivo pra não
+// Três buscas relacionadas ao Mercado Livre, no mesmo arquivo pra não
 // estourar o limite de 12 Serverless Functions do plano Hobby (ver
 // README, seção Arquitetura):
 //
@@ -14,6 +14,14 @@
 //    quando disponível, o peso/dimensões da embalagem já declarados no
 //    anúncio — resolve o problema de precisar digitar isso à mão toda
 //    vez. Uso: GET /api/ml-category-search?mode=product&q=kit+gamer
+//
+// 3. mode=path — devolve o caminho completo (raiz até a categoria
+//    escolhida, ex.: "Eletrônicos, Áudio e Vídeo > Áudio > Fones de
+//    Ouvido") pra equipe entender que tipo de produto realmente cai
+//    naquela categoria, não só o nome final. Endpoint público do ML
+//    (`GET /categories/{id}`), mesma política de rate limit por IP da
+//    mode=category. Uso: GET /api/ml-category-search?mode=path&q=MLB196208
+//    (aqui "q" é o category_id, não uma palavra-chave)
 const { checkIpRateLimit } = require("../lib/rateLimit");
 const { getValidAccessToken } = require("../lib/ml");
 const { getSessionFromRequest } = require("../lib/auth");
@@ -181,10 +189,45 @@ async function handleProductMode(req, res, q) {
   }
 }
 
+async function handlePathMode(req, res, categoryId) {
+  const allowed = await checkIpRateLimit(req, "ml-category-search", RATE_LIMIT, RATE_WINDOW_SECONDS);
+  if (!allowed) {
+    res.status(429).json({ error: "Muitas buscas em pouco tempo. Aguarde um instante." });
+    return;
+  }
+
+  try {
+    const mlResp = await fetch(`https://api.mercadolibre.com/categories/${encodeURIComponent(categoryId)}`);
+    const data = await mlResp.json();
+
+    if (!mlResp.ok) {
+      res.status(mlResp.status).json({ error: "Mercado Livre recusou a consulta de categoria.", details: data });
+      return;
+    }
+
+    const path = Array.isArray(data.path_from_root)
+      ? data.path_from_root.map((p) => ({ id: p.id, name: p.name }))
+      : [];
+    res.status(200).json({ path });
+  } catch (err) {
+    res.status(500).json({ error: String(err.message || err) });
+  }
+}
+
 module.exports = async (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host}`);
   const q = (url.searchParams.get("q") || "").trim();
-  const mode = url.searchParams.get("mode") === "product" ? "product" : "category";
+  const modeParam = url.searchParams.get("mode");
+  const mode = modeParam === "product" ? "product" : modeParam === "path" ? "path" : "category";
+
+  if (mode === "path") {
+    if (!q) {
+      res.status(400).json({ error: "Parâmetro 'q' (category_id) ausente." });
+      return;
+    }
+    await handlePathMode(req, res, q);
+    return;
+  }
 
   if (q.length < 3) {
     res.status(400).json({ error: "Parâmetro 'q' precisa ter ao menos 3 caracteres." });

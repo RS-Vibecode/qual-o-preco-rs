@@ -3,7 +3,7 @@
 Ferramenta interna da **RS Soluções Digitais** para precificar produtos de marketplace em
 poucos segundos — custo, margem desejada, frete e taxas reais de cada plataforma entram, o
 preço de venda ideal sai, comparado lado a lado entre Mercado Livre, Amazon, Shopee, TikTok
-Shop, Magalu e (em breve) Shein.
+Shop e Magalu.
 
 **Por que existe:** precificar errado é uma dor recorrente de quem vende em marketplace —
 taxa de comissão que varia por categoria, taxa fixa que muda por faixa de preço, frete que
@@ -211,8 +211,7 @@ fora não incomoda de novo até a aba ser fechada).
 
 ## Amazon, Shopee, TikTok Shop e Magalu (taxas de referência editáveis)
 
-Esses marketplaces (e outros grandes marketplaces brasileiros — Shein)
-**não têm API pública para calcular taxa antes da venda**:
+Esses marketplaces **não têm API pública para calcular taxa antes da venda**:
 
 - **Amazon** tem uma API de estimativa de taxa (`Product Fees API` / SP-API), mas em 2026
   passou a exigir assinatura paga de US$1.400/ano — inviável para este caso de uso.
@@ -223,7 +222,6 @@ Esses marketplaces (e outros grandes marketplaces brasileiros — Shein)
   outras, sua comissão varia principalmente pela **forma de repasse** escolhida pelo vendedor
   (parcelado × à vista/antecipado), não por categoria de produto — por isso o campo
   "categoria" cadastrado pro Magalu é, na prática, a forma de repasse.
-- **Shein** não tem API de taxa documentada publicamente.
 
 A solução foi uma **tabela de referência editável pelo admin** — guardada no banco
 (`marketplace_rates`, Supabase), não hardcoded em arquivo de código. O admin corrige um valor
@@ -252,8 +250,7 @@ repasse) estão cadastradas**, todas conferidas contra a fonte oficial de cada m
 (Amazon/Shopee/TikTok Shop em 13/07/2026, `scripts/seed-amazon-rates.js`,
 `seed-shopee-rates.js`, `seed-tiktok-rates.js`; Magalu em 15/07/2026, com os percentuais
 informados pela diretoria de e-commerce e a tarifa fixa de referência do Portal do Seller).
-Shein entra pelo mesmo processo: alguém com acesso ao painel do vendedor manda a tabela
-oficial de comissão, os valores são conferidos e cadastrados.
+Shein foi cogitada mas descartada como marketplace de referência (decisão do cliente).
 
 Sem categoria/forma de repasse selecionada (Amazon, Magalu) ou checkbox marcado
 (Shopee/TikTok Shop), o marketplace de referência simplesmente **não entra** na comparação (em
@@ -344,8 +341,6 @@ criado (usuário, taxa de marketplace) logo em seguida.
 
 ## Limitações conhecidas e próximos passos
 
-- Shein ainda não tem taxas cadastradas (estrutura pronta, falta o dado — ver [Amazon, Shopee,
-  TikTok Shop e Magalu](#amazon-shopee-tiktok-shop-e-magalu-taxas-de-referência-editáveis)).
 - Cliente não redefine a própria senha sem passar pelo admin.
 - Frete real do Mercado Livre exige a conta ter Mercado Envios aceito — cada cliente que
   conectar precisa dessa adesão feita no próprio painel do Mercado Livre para ver o valor
